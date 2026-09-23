@@ -25,6 +25,9 @@ ih:
   security:
     enabled: ${IH_SECURITY_ENABLED:true}
     header: ${IH_API_KEY_HEADER:X-API-Key}
+    crawler-key: ${IH_API_KEY_CRAWLER:}
+    ui-key: ${IH_API_KEY_UI:}
+    admin-key: ${IH_API_KEY_ADMIN:}
 
 management:
   endpoints:

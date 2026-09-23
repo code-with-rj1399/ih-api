@@ -2,6 +2,7 @@ package ai.interviewhq.api.web;
 
 import ai.interviewhq.api.IhApiApplication;
 import ai.interviewhq.api.config.DynamoDbProperties;
+import ai.interviewhq.api.security.SecurityProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,10 +19,14 @@ public class HealthController {
 
     private final Environment environment;
     private final DynamoDbProperties dynamoDbProperties;
+    private final SecurityProperties securityProperties;
 
-    public HealthController(Environment environment, DynamoDbProperties dynamoDbProperties) {
+    public HealthController(Environment environment,
+                            DynamoDbProperties dynamoDbProperties,
+                            SecurityProperties securityProperties) {
         this.environment = environment;
         this.dynamoDbProperties = dynamoDbProperties;
+        this.securityProperties = securityProperties;
     }
 
     @GetMapping("/meta")
@@ -35,6 +40,11 @@ public class HealthController {
         dynamodb.put("autoCreateTable", dynamoDbProperties.isAutoCreateTable());
         dynamodb.put("mode", dynamoDbProperties.hasEndpointOverride() ? "local" : "aws");
 
+        Map<String, Object> security = new LinkedHashMap<>();
+        security.put("enabled", securityProperties.isEnabled());
+        security.put("header", securityProperties.getHeader());
+        security.put("configuredKeys", securityProperties.resolvedKeys().size());
+
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("service", "ih-api");
         body.put("version", "1.0.0");
@@ -43,6 +53,7 @@ public class HealthController {
         body.put("timestamp", Instant.now().toString());
         body.put("implementation", IhApiApplication.class.getPackageName());
         body.put("dynamodb", dynamodb);
+        body.put("security", security);
         return ResponseEntity.ok(body);
     }
 }
