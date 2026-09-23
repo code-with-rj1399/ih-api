@@ -47,3 +47,12 @@ info:
   app:
     name: ih-api
     description: InterviewHQ API — validates, deduplicates, and persists interview data
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true

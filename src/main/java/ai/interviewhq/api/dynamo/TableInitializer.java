@@ -21,8 +21,6 @@ import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 import software.amazon.awssdk.services.dynamodb.model.TableStatus;
 
-import java.util.List;
-
 /**
  * Creates the single table and GSIs when {@code ih.dynamodb.auto-create-table=true}
  * (local/dev only). stg/prod should provision the table out of band.
