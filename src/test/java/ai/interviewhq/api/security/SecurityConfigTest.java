@@ -49,27 +49,28 @@ class SecurityConfigTest {
 
         @Test
         void apiWithoutKeyIsUnauthorized() throws Exception {
-            mockMvc.perform(get("/api/v1/questions"))
+            mockMvc.perform(get("/api/v1/questions/types"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
         void readKeyCanGetButCannotIngest() throws Exception {
-            mockMvc.perform(get("/api/v1/questions").header("X-API-Key", "ui-secret"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/v1/questions/types").header("X-API-Key", "ui-secret"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.questionTypes").isArray());
             mockMvc.perform(post("/api/v1/questions/ingest").header("X-API-Key", "ui-secret"))
                     .andExpect(status().isForbidden());
         }
 
         @Test
         void crawlerKeyIsAccepted() throws Exception {
-            mockMvc.perform(get("/api/v1/questions").header("X-API-Key", "crawler-secret"))
-                    .andExpect(status().isNotFound());
+            mockMvc.perform(get("/api/v1/questions/types").header("X-API-Key", "crawler-secret"))
+                    .andExpect(status().isOk());
         }
 
         @Test
         void invalidKeyIsRejected() throws Exception {
-            mockMvc.perform(get("/api/v1/questions").header("X-API-Key", "nope"))
+            mockMvc.perform(get("/api/v1/questions/types").header("X-API-Key", "nope"))
                     .andExpect(status().isUnauthorized());
         }
     }

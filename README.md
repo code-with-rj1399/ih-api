@@ -17,7 +17,6 @@ This repository is being built iteratively on the `grok-changes` branch.
 - Spring Boot 3.5
 - AWS SDK v2 DynamoDB
 - Spring Security (API keys, disableable for local/dev)
-- springdoc OpenAPI / Swagger UI — upcoming
 
 ## Profiles
 
@@ -28,16 +27,13 @@ This repository is being built iteratively on the `grok-changes` branch.
 | `stg` | AWS DynamoDB (no endpoint override) | `interview-hq-stg` | enabled |
 | `prod` | AWS DynamoDB via IAM role | `interview-hq` | enabled |
 
-Disable (or re-enable) security independently of the profile:
+Disable security for development:
 
 ```bash
 IH_SECURITY_ENABLED=false SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
-IH_SECURITY_ENABLED=true  IH_API_KEY_CRAWLER=secret SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
 ```
 
-### API keys
-
-Send the key as `X-API-Key` or `Authorization: Bearer <key>`.
+Send keys as `X-API-Key` or `Authorization: Bearer <key>`.
 
 | Env var | Roles |
 | --- | --- |
@@ -45,33 +41,55 @@ Send the key as `X-API-Key` or `Authorization: Bearer <key>`.
 | `IH_API_KEY_CRAWLER` | `CRAWLER`, `READ` |
 | `IH_API_KEY_ADMIN` | `ADMIN`, `CRAWLER`, `READ` |
 
-When security is enabled:
+## API
 
-- `GET /actuator/health` and `/api/v1/meta` stay public
-- reads require `READ`
-- ingest / crawler writes require `CRAWLER` or `ADMIN`
-
-## Single-table keys
-
-Owned by this service — crawlers must not construct them.
-
-| Entity | PK | SK |
+| Method | Path | Purpose |
 | --- | --- | --- |
-| Question | `QUESTION#{sha256}` | `ENTITY` |
-| Experience | `EXPERIENCE#{id}` | `ENTITY` |
-| Experience → Question | `EXPERIENCE#{id}` | `QUESTION#{questionId}` |
-| SourceSeed | `SOURCE#{sourceId}` | `SEED#{seedId}` |
-| CrawlRun | `CRAWL_RUN#{runId}` | `ENTITY` |
-| CrawlPage | `PAGE#{urlHash}` | `ENTITY` |
+| `POST` | `/api/v1/questions/ingest` | Crawler ingestion (validate, hash, conditional write) |
+| `GET` | `/api/v1/questions` | List recent questions (`company`, `type`, `source`, `cursor`) |
+| `GET` | `/api/v1/questions/{id}` | Get a question |
+| `GET` | `/api/v1/questions/types` | Canonical question types |
+| `GET` | `/api/v1/experiences/{id}` | Get an interview experience |
+| `GET` | `/api/v1/experiences/{id}/questions` | Questions extracted from an experience |
+| `GET` | `/api/v1/sources/seeds` | All crawl seeds |
+| `GET`/`PUT`/`PATCH`/`DELETE` | `/api/v1/sources/{sourceId}/seeds/{seedId}` | Seed configuration |
+| `GET`/`PUT` | `/api/v1/crawl-runs` | Crawl run metadata |
+| `GET`/`PUT` | `/api/v1/pages` | Crawled page lookup / upsert (`?url=` or `/{urlHash}`) |
+| `GET` | `/api/v1/meta` | Service + DynamoDB + security status |
+| `GET` | `/actuator/health` | Liveness |
 
-## Indexes
+Ingest example (from the schema):
 
-| Index | Access pattern |
-| --- | --- |
-| GSI1 `COMPANY#{company}` | recent questions for a company |
-| GSI2 `TYPE#{questionType}` | recent questions by type |
-| GSI3 `SOURCE#{sourceName}` | questions from a source |
-| GSI4 `ENTITY_TYPE#{entityType}` | list recent entities |
+```http
+POST /api/v1/questions/ingest
+Content-Type: application/json
+
+{
+  "source": {
+    "name": "LeetCode",
+    "url": "https://leetcode.com/discuss/interview-experience/123"
+  },
+  "experience": {
+    "title": "Google Interview Experience",
+    "company": "Google",
+    "postedAt": "2026-09-23T10:20:00Z",
+    "author": "anonymous"
+  },
+  "questions": [
+    {
+      "questionText": "Design a notification system.",
+      "questionDescription": "Design a notification system that supports reliable delivery of notifications.",
+      "questionType": "System Design",
+      "topics": ["Notifications"],
+      "problemUrl": null,
+      "confidence": 0.92,
+      "questionSpecificity": 0.86
+    }
+  ]
+}
+```
+
+Invalid questions are rejected (not persisted). Duplicate identity hashes return `status: DUPLICATE` (idempotent). `problemUrl` is dropped if it is the experience URL.
 
 ## Status
 
@@ -80,7 +98,7 @@ Owned by this service — crawlers must not construct them.
 - [x] Step 3 — Domain model matching the single-table schema
 - [x] Step 4 — Repositories, GSIs, conditional writes
 - [x] Step 5 — API-key security (disableable)
-- [ ] Step 6 — REST API (ingest, questions, seeds, crawl runs, pages)
+- [x] Step 6 — REST API (ingest, questions, seeds, crawl runs, pages)
 - [ ] Step 7 — Tests, Docker image, OpenAPI polish
 
 ## Run locally
@@ -89,8 +107,3 @@ Owned by this service — crawlers must not construct them.
 docker compose up dynamodb-local -d
 SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
 ```
-
-Health:
-
-- `GET /actuator/health`
-- `GET /api/v1/meta`
