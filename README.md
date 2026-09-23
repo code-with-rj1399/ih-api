@@ -47,12 +47,25 @@ Question id = `SHA-256(normalizedCompany + normalizedQuestionText + normalizedQu
 
 DSA / algorithm / LeetCode coding problems are stored as **Coding**.
 
+## Indexes
+
+| Index | PK | SK | Access pattern |
+| --- | --- | --- | --- |
+| GSI1 | `COMPANY#{company}` | `{postedAt}#{questionId}` | recent questions for a company |
+| GSI2 | `TYPE#{questionType}` | `{postedAt}#{questionId}` | recent questions by type |
+| GSI3 | `SOURCE#{sourceName}` | `{postedAt}#{questionId}` | questions from a source |
+| GSI4 | `ENTITY_TYPE#{entityType}` | `{timestamp}#{id}` | list recent entities (API listing) |
+
+Ingestion uses DynamoDB conditional writes (`attribute_not_exists(PK)`) so duplicate questions and experiences are idempotent.
+
+`local`/`dev` auto-create the table and GSIs. `stg`/`prod` must provision the table out of band (`DYNAMODB_AUTO_CREATE_TABLE=false`).
+
 ## Status
 
 - [x] Step 1 — Spring Boot scaffold, actuator, meta endpoint
 - [x] Step 2 — DynamoDB client + local vs AWS profiles
 - [x] Step 3 — Domain model matching the single-table schema
-- [ ] Step 4 — Repositories, GSIs, conditional writes
+- [x] Step 4 — Repositories, GSIs, conditional writes
 - [ ] Step 5 — API-key security (disableable)
 - [ ] Step 6 — REST API (ingest, questions, seeds, crawl runs, pages)
 - [ ] Step 7 — Tests, Docker image, OpenAPI polish
