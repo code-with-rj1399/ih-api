@@ -1,0 +1,8 @@
+# Production: AWS DynamoDB via IAM role. Table auto-create is off.
+ih:
+  dynamodb:
+    table: ${DYNAMODB_TABLE:interview-hq}
+    endpoint: ${DYNAMODB_ENDPOINT:}
+    auto-create-table: ${DYNAMODB_AUTO_CREATE_TABLE:false}
+  security:
+    enabled: ${IH_SECURITY_ENABLED:true}

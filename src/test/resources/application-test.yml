@@ -1,0 +1,11 @@
+# Tests never reach a real DynamoDB. The client bean is replaced in test config.
+ih:
+  dynamodb:
+    table: interview-hq-test
+    region: ap-south-1
+    endpoint: http://localhost:0
+    auto-create-table: false
+    access-key: dummy
+    secret-key: dummy
+  security:
+    enabled: false

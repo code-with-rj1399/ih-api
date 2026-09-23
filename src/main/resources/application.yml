@@ -14,6 +14,18 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s
 
+ih:
+  dynamodb:
+    table: ${DYNAMODB_TABLE:interview-hq}
+    region: ${AWS_REGION:ap-south-1}
+    endpoint: ${DYNAMODB_ENDPOINT:}
+    auto-create-table: ${DYNAMODB_AUTO_CREATE_TABLE:false}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+  security:
+    enabled: ${IH_SECURITY_ENABLED:true}
+    header: ${IH_API_KEY_HEADER:X-API-Key}
+
 management:
   endpoints:
     web:

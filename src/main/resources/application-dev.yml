@@ -1,0 +1,11 @@
+# Shared dev environment. Defaults to DynamoDB Local (or a shared local-style
+# endpoint). Override DYNAMODB_ENDPOINT to point at a cloud dev table if needed.
+ih:
+  dynamodb:
+    table: ${DYNAMODB_TABLE:interview-hq-dev}
+    endpoint: ${DYNAMODB_ENDPOINT:http://localhost:8000}
+    auto-create-table: ${DYNAMODB_AUTO_CREATE_TABLE:true}
+    access-key: ${AWS_ACCESS_KEY_ID:dummy}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:dummy}
+  security:
+    enabled: ${IH_SECURITY_ENABLED:false}
