@@ -30,33 +30,28 @@ This repository is being built iteratively on the `grok-changes` branch.
 
 The DynamoDB endpoint is configuration-driven. The same application code runs locally and in AWS.
 
-```bash
-# local / dev — DynamoDB Local
-SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
+## Single-table keys
 
-# staging — AWS account credentials / task role
-SPRING_PROFILES_ACTIVE=stg ./mvnw spring-boot:run
+Owned by this service — crawlers must not construct them.
 
-# production
-SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
-```
+| Entity | PK | SK |
+| --- | --- | --- |
+| Question | `QUESTION#{sha256}` | `ENTITY` |
+| Experience | `EXPERIENCE#{id}` | `ENTITY` |
+| Experience → Question | `EXPERIENCE#{id}` | `QUESTION#{questionId}` |
+| SourceSeed | `SOURCE#{sourceId}` | `SEED#{seedId}` |
+| CrawlRun | `CRAWL_RUN#{runId}` | `ENTITY` |
+| CrawlPage | `PAGE#{urlHash}` | `ENTITY` |
 
-Environment variables (see `.env.example`):
+Question id = `SHA-256(normalizedCompany + normalizedQuestionText + normalizedQuestionType)`.
 
-| Variable | Purpose |
-| --- | --- |
-| `DYNAMODB_ENDPOINT` | Set for local (`http://localhost:8000`). Leave empty for AWS. |
-| `DYNAMODB_TABLE` | Table name override |
-| `DYNAMODB_AUTO_CREATE_TABLE` | `true` only in local/dev |
-| `AWS_REGION` | Default `ap-south-1` |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Dummy values for DynamoDB Local; IAM role in stg/prod |
-| `IH_SECURITY_ENABLED` | `false` to disable API-key auth |
+DSA / algorithm / LeetCode coding problems are stored as **Coding**.
 
 ## Status
 
 - [x] Step 1 — Spring Boot scaffold, actuator, meta endpoint
 - [x] Step 2 — DynamoDB client + local vs AWS profiles
-- [ ] Step 3 — Domain model matching the single-table schema
+- [x] Step 3 — Domain model matching the single-table schema
 - [ ] Step 4 — Repositories, GSIs, conditional writes
 - [ ] Step 5 — API-key security (disableable)
 - [ ] Step 6 — REST API (ingest, questions, seeds, crawl runs, pages)
