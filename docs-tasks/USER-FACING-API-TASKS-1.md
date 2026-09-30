@@ -282,9 +282,7 @@ Prefer URL-safe opaque Base64 JSON. Cursor contents are implementation details.
 
 ## T004 — Public Question DTO and mapper
 
-- [ ] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Define the public question representation and mapper from persisted data.
 
@@ -320,9 +318,7 @@ Use the crawler schema as the field source. Do not invent topic fields absent fr
 
 ## T005 — Public Experience DTO and mapper
 
-- [ ] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Define the public interview-experience representation and mapper.
 
@@ -357,9 +353,7 @@ Preserve useful provenance such as source URL/platform, dates, company, role, an
 
 ## T006 — Question repository access paths
 
-- [ ] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Implement repository methods for question detail and experience-scoped question reads.
 
@@ -395,9 +389,7 @@ Verify the actual repository/schema before coding; do not guess key names.
 
 ## T007 — Experience repository access paths
 
-- [ ] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Implement repository methods for experience detail and required list reads.
 
