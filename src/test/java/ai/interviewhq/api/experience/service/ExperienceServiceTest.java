@@ -22,7 +22,7 @@ class ExperienceServiceTest {
         var service = new ExperienceService(repo, new ExperienceMapper(),
                 new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper()));
 
-        service.list(null, null, null);
+        service.list(null, null, null, null);
 
         verify(repo).list(eq("EINDEX#POSTED"), eq(false), eq(25), isNull());
     }
@@ -36,8 +36,22 @@ class ExperienceServiceTest {
         var service = new ExperienceService(repo, new ExperienceMapper(),
                 new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper()));
 
-        service.list(10, "opaque", "oldest");
+        service.list(10, "opaque", "oldest", "Acme Corp");
 
-        verify(repo).list(eq("EINDEX#POSTED"), eq(true), eq(10), any());
+        verify(repo).list(eq("EINDEX#COMPANY#acme corp"), eq(true), eq(10), any());
+    }
+    @Test
+    void companyFilterUsesNormalizedCompanyPartition() {
+        ExperienceRepository repo = mock(ExperienceRepository.class);
+        when(repo.list(anyString(), anyBoolean(), anyInt(), any()))
+                .thenReturn(new DynamoDbPage<>(List.of(), Map.of()));
+
+        var service = new ExperienceService(repo, new ExperienceMapper(),
+                new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper()));
+
+        service.list(null, null, "newest", "  Acme   Corp ");
+
+        verify(repo).list(eq("EINDEX#COMPANY#acme corp"), eq(false), eq(25), isNull());
     }
 }
+
