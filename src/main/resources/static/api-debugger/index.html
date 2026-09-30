@@ -3,94 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>InterviewHQ API Debugger</title>
+  <title>InterviewHQ</title>
   <link rel="stylesheet" href="/api-debugger/api-debugger.css">
 </head>
 <body>
-<header class="topbar">
-  <div>
-    <div class="eyebrow">InterviewHQ</div>
-    <h1>API Debugger</h1>
-    <p>Explore the public hq-API without Postman. Browse experiences, questions, metadata, filters and pagination.</p>
-  </div>
-  <div class="base-url">
-    <label for="baseUrl">API base URL</label>
-    <div class="base-row">
-      <input id="baseUrl" value="" placeholder="http://localhost:8091">
-      <button id="saveBase" class="secondary">Use</button>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">HQ</div>
+      <div>
+        <div class="brand-name">InterviewHQ</div>
+        <div class="brand-subtitle">Interview experiences & questions</div>
+      </div>
+    </div>
+    <div class="api-config">
+      <label for="baseUrl">API</label>
+      <div class="api-row">
+        <input id="baseUrl" placeholder="http://localhost:8091">
+        <button id="saveBase" class="secondary">Use</button>
+      </div>
     </div>
   </div>
 </header>
 
-<nav class="tabs" aria-label="API resources">
-  <button class="tab active" data-tab="experiences">Experiences</button>
-  <button class="tab" data-tab="questions">Questions</button>
-  <button class="tab" data-tab="metadata">Metadata</button>
+<nav class="main-nav">
+  <div class="nav-inner">
+    <button class="tab active" data-tab="experiences">Experiences</button>
+    <button class="tab" data-tab="questions">Questions</button>
+  </div>
 </nav>
 
 <main>
   <section id="experiences" class="panel active">
-    <div class="panel-head">
+    <div class="page-heading">
       <div>
-        <h2>Experiences</h2>
-        <span class="muted">GET /api/v1/experiences</span>
+        <div class="eyebrow">Interview experiences</div>
+        <h1>What candidates experienced</h1>
+        <p>Browse recent interview experiences and open one to see the questions asked.</p>
       </div>
-      <button class="primary" data-action="load-experiences">Run request</button>
+      <button class="primary" data-action="load-experiences">Refresh</button>
     </div>
+
     <div class="filters">
-      <label>Company<input id="expCompany" placeholder="Amazon"></label>
-      <label>Sort<select id="expSort"><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label>
-      <label>Limit<input id="expLimit" type="number" min="1" max="100" value="25"></label>
-      <label>Cursor<input id="expCursor" placeholder="Opaque cursor (optional)"></label>
+      <label>Company<input id="expCompany" placeholder="e.g. Amazon"></label>
+      <label>Sort<select id="expSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
+      <label>Show<input id="expLimit" type="number" min="1" max="100" value="25"></label>
     </div>
-    <div id="experienceList" class="cards"></div>
-    <div id="experienceDetail" class="detail empty">Select an experience to inspect its details and questions.</div>
+
+    <div id="experienceList" class="experience-list"></div>
+    <div id="experiencePagination" class="pagination"></div>
+
+    <article id="experienceDetail" class="experience-detail hidden"></article>
   </section>
 
   <section id="questions" class="panel">
-    <div class="panel-head">
+    <div class="page-heading">
       <div>
-        <h2>Questions</h2>
-        <span class="muted">GET /api/v1/questions</span>
+        <div class="eyebrow">Interview questions</div>
+        <h1>Questions candidates were asked</h1>
+        <p>Search the questions already available through the hq-API.</p>
       </div>
-      <button class="primary" data-action="load-questions">Run request</button>
+      <button class="primary" data-action="load-questions">Refresh</button>
     </div>
+
     <div class="filters">
-      <label>Company<input id="qCompany" placeholder="Amazon"></label>
-      <label>Question type<input id="qType" placeholder="DSA"></label>
-      <label>Sort<select id="qSort"><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label>
-      <label>Limit<input id="qLimit" type="number" min="1" max="100" value="25"></label>
-      <label class="wide">Cursor<input id="qCursor" placeholder="Opaque cursor (optional)"></label>
+      <label>Company<input id="qCompany" placeholder="e.g. Google"></label>
+      <label>Question type<input id="qType" placeholder="e.g. DSA"></label>
+      <label>Sort<select id="qSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
+      <label>Show<input id="qLimit" type="number" min="1" max="100" value="25"></label>
     </div>
-    <div id="questionList" class="cards"></div>
-    <div id="questionDetail" class="detail empty">Select a question to inspect its full response.</div>
-  </section>
 
-  <section id="metadata" class="panel">
-    <div class="panel-head">
-      <div>
-        <h2>Metadata</h2>
-        <span class="muted">Materialized companies and question types</span>
-      </div>
-    </div>
-    <div class="metadata-grid">
-      <div class="metadata-card">
-        <div class="panel-head compact"><h3>Companies</h3><button class="secondary" data-action="load-companies">Load</button></div>
-        <div id="companies" class="tag-list"></div>
-      </div>
-      <div class="metadata-card">
-        <div class="panel-head compact"><h3>Question types</h3><button class="secondary" data-action="load-types">Load</button></div>
-        <div id="questionTypes" class="tag-list"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="raw-panel">
-    <div class="panel-head compact">
-      <div><h2>Last response</h2><span id="requestLabel" class="muted">No request yet</span></div>
-      <button id="clearRaw" class="secondary">Clear</button>
-    </div>
-    <pre id="rawResponse">Run an API request to see the raw JSON response.</pre>
+    <div id="questionList" class="question-list"></div>
+    <div id="questionPagination" class="pagination"></div>
+    <article id="questionDetail" class="question-detail hidden"></article>
   </section>
 </main>
 
