@@ -36,9 +36,20 @@ class ExperienceServiceTest {
         var service = new ExperienceService(repo, new ExperienceMapper(),
                 new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper()));
 
-        service.list(10, "opaque", "oldest", "Acme Corp");
+        var codec = new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper());
+        String cursor = codec.encode(Map.of(
+                "pk", "EINDEX#COMPANY#acme corp",
+                "sk", "2026-09-30T00:00:00Z#7"));
 
-        verify(repo).list(eq("EINDEX#COMPANY#acme corp"), eq(true), eq(10), any());
+        service.list(10, cursor, "oldest", "Acme Corp");
+
+        verify(repo).list(
+                eq("EINDEX#COMPANY#acme corp"),
+                eq(true),
+                eq(10),
+                eq(Map.of(
+                        "pk", "EINDEX#COMPANY#acme corp",
+                        "sk", "2026-09-30T00:00:00Z#7")));
     }
     @Test
     void companyFilterUsesNormalizedCompanyPartition() {
