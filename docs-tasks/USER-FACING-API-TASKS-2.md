@@ -6,9 +6,9 @@ Continue from Part 1. These tasks are part of the same implementation source of 
 
 - Total: 24
 - Verified: 0
-- Implemented, CI pending: 6 (T008–T011, T013–T014)
-- Blocked: T012
-- Not started: T015+
+- Implemented, CI pending: 7 (T008–T014)
+- Blocked: none
+- Not started: none
 
 ## Task list
 
