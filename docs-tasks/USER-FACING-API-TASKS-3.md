@@ -288,10 +288,10 @@ T002, T003, T008, T009, T012, T013, T014, T015, T017, T018.
 
 **Acceptance criteria**
 
-- [ ] Every public endpoint has validation.
-- [ ] Invalid requests do not invoke repositories.
-- [ ] Limits are enforced consistently.
-- [ ] Public error messages are actionable without leaking internals.
+- [x] Every public endpoint has validation.
+- [x] Invalid requests do not invoke repositories.
+- [x] Limits are enforced consistently.
+- [x] Public error messages are actionable without leaking internals.
 
 **Tests**
 
