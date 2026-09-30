@@ -33,3 +33,7 @@ info:
   app:
     name: ih-api
     description: InterviewHQ backend API
+
+api:
+  cors:
+    allowed-origins: ${API_CORS_ALLOWED_ORIGINS:http://localhost:3000}
