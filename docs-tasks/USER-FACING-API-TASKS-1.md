@@ -152,8 +152,8 @@ Error response:
 ## Progress
 
 - Total: 24
-- Completed: 1
-- Remaining: 23
+- Completed: 2
+- Remaining: 22
 
 Planning commit: task documentation only.
 
@@ -198,7 +198,7 @@ Use repository conventions under `ai.interviewhq.api`. Do not introduce unrelate
 
 ## T002 — Common DTO envelope and error handling
 
-- [ ] Status
+- [x] Status
 
 **Goal**
 
@@ -218,14 +218,14 @@ T001.
 
 **Acceptance criteria**
 
-- [ ] Shared public error envelope exists.
-- [ ] Validation and not-found errors map consistently.
-- [ ] Unexpected exceptions do not expose DynamoDB internals.
+- [x] Shared public error envelope exists.
+- [x] Validation and not-found errors map consistently.
+- [x] Unexpected exceptions do not expose DynamoDB internals.
 
 **Tests**
 
-- [ ] MockMvc coverage for 400, 404, and 500 mappings.
-- [ ] JSON shape assertions.
+- [x] MockMvc coverage for 400, 404, and 500 mappings.
+- [x] JSON shape assertions.
 
 **Implementation notes**
 
