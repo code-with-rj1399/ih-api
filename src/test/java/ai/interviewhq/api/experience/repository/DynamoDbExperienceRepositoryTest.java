@@ -72,7 +72,7 @@ class DynamoDbExperienceRepositoryTest {
                 .listByCrawlRun(9, 25, Map.of());
 
         assertEquals(1, result.items().size());
-        assertEquals("4", result.items().getFirst().get("id"));
+        assertEquals("4", result.items().get(0).get("id"));
         assertEquals("EXPERIENCE#4", result.lastEvaluatedKey().get("sk"));
 
         var captor = org.mockito.ArgumentCaptor.forClass(QueryRequest.class);
