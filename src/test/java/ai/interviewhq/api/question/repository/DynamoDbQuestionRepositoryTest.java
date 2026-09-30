@@ -55,7 +55,7 @@ class DynamoDbQuestionRepositoryTest {
                         .build());
 
         var result = new DynamoDbQuestionRepository(client, new ObjectMapper(), "table")
-                .list("QINDEX#EXTRACTED", true, 25,
+                .list("QINDEX#EXTRACTED", false, 25,
                         Map.of("pk", "QINDEX#EXTRACTED", "sk", "2026-09-30T11:00:00Z#8"),
                         null, Map.of());
 
@@ -67,7 +67,7 @@ class DynamoDbQuestionRepositoryTest {
         verify(client).query(captor.capture());
         QueryRequest request = captor.getValue();
         assertEquals("QINDEX#EXTRACTED", request.expressionAttributeValues().get(":pk").s());
-        assertTrue(request.scanIndexForward());
+        assertFalse(request.scanIndexForward());
         assertEquals(25, request.limit());
         assertEquals("QINDEX#EXTRACTED", request.exclusiveStartKey().get("pk").s());
         verify(client, never()).scan(any(ScanRequest.class));
