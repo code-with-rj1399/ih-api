@@ -5,9 +5,6 @@ server:
 spring:
   application:
     name: ih-api
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/interviewhq}
   lifecycle:
     timeout-per-shutdown-phase: 30s
   jackson:
@@ -17,6 +14,12 @@ spring:
     default-property-inclusion: non_null
     time-zone: UTC
 
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  dynamodb:
+    endpoint: ${DYNAMODB_ENDPOINT:}
+    table: ${DYNAMODB_TABLE:interviewhq-dev}
+
 management:
   endpoints:
     web:
@@ -25,9 +28,6 @@ management:
   endpoint:
     health:
       show-details: when_authorized
-  info:
-    env:
-      enabled: true
 
 info:
   app:
