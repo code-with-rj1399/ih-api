@@ -60,7 +60,7 @@ class DynamoDbQuestionRepositoryTest {
                         null, Map.of());
 
         assertEquals(1, result.items().size());
-        assertEquals("7", result.items().getFirst().id().toString());
+        assertEquals("7", result.items().get(0).id().toString());
         assertEquals("QINDEX#EXTRACTED", result.lastEvaluatedKey().get("pk"));
 
         var captor = org.mockito.ArgumentCaptor.forClass(QueryRequest.class);
