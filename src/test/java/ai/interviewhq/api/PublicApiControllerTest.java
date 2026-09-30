@@ -1,5 +1,7 @@
 package ai.interviewhq.api;
 
+import ai.interviewhq.api.system.controller.PublicApiController;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
