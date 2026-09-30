@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,7 +20,7 @@ class WebConfigTest {
     @Test
     void allowsConfiguredLocalOrigin() {
         HttpServletRequest request =
-                new org.springframework.mock.web.MockHttpServletRequest(
+                new MockHttpServletRequest(
                         "GET",
                         "/api/v1/health");
 
