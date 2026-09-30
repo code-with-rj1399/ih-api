@@ -122,7 +122,7 @@ class DynamoDbExperienceRepositoryTest {
         verify(client).batchGetItem(batchCaptor.capture());
         assertEquals("EXPERIENCE#4",
                 batchCaptor.getValue().requestItems().get("table").keys().get(0).get("pk").s());
-        verify(client, never()).scan(any());
+        verify(client, never()).scan(any(software.amazon.awssdk.services.dynamodb.model.ScanRequest.class));
     }
 
     @Test
