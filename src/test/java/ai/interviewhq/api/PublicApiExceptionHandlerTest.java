@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,6 +43,6 @@ class PublicApiExceptionHandlerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error.code").value("INTERNAL_ERROR"))
                 .andExpect(jsonPath("$.error.message").value("An unexpected error occurred"))
-                .andExpect(jsonPath("$.error.message").doesNotContain("internal details"));
+                .andExpect(jsonPath("$.error.message").value(not(containsString("internal details"))));
     }
 }
