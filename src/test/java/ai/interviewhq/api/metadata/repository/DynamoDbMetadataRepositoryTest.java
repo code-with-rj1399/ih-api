@@ -44,6 +44,6 @@ class DynamoDbMetadataRepositoryTest {
                 captor.getValue().expressionAttributeValues().get(":pk").s());
         assertEquals(100, captor.getValue().limit());
         assertTrue(captor.getValue().scanIndexForward());
-        verify(client, never()).scan(any());
+        verify(client, never()).scan(any(software.amazon.awssdk.services.dynamodb.model.ScanRequest.class));
     }
 }
