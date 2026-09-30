@@ -1,28 +1,158 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ih-api Debugger</title><link rel="stylesheet" href="/api-debugger/api-debugger.css"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ih-api Debugger</title>
+  <link rel="stylesheet" href="/api-debugger/api-debugger.css">
+</head>
 <body>
-<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="brand-mark">HQ</div><div><strong>ih-api Debugger</strong><span>API explorer</span></div></div><div class="api-state"><span id="apiDot"></span><span id="apiState">Connecting…</span></div></div></header>
-<div class="app-shell">
-<aside class="sidebar"><div class="sidebar-title">Explore</div><button class="side-link active" data-tab="experiences"><span>◉</span> Experiences</button><button class="side-link" data-tab="questions"><span>?</span> Questions</button></aside>
-<main class="content">
-<section id="experiences" class="panel active">
-<div class="page-head"><div><div class="crumb">ih-api Debugger / Experiences</div><h1>Interview Experiences</h1><p>Browse experiences fetched from hq-API.</p></div><button class="primary" data-action="load-experiences">Refresh</button></div>
-<div class="toolbar"><label>Company<input id="expCompany" placeholder="Search company"></label><label>Sort<select id="expSort"><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label><label>Rows<select id="expLimit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></label><button class="secondary" data-action="clear-exp">Clear</button></div>
-<div id="experienceMessage" class="message hidden"></div>
-<div class="table-card"><table><thead><tr><th>Experience</th><th>Company</th><th>Role</th><th>Source</th><th>Posted</th><th>Questions</th></tr></thead><tbody id="experienceRows"></tbody></table></div>
-<div id="experiencePagination" class="pagination"></div>
-<article id="experienceDetail" class="drawer hidden"></article>
-</section>
-<section id="questions" class="panel">
-<div class="page-head"><div><div class="crumb">ih-api Debugger / Questions</div><h1>Interview Questions</h1><p>Browse questions fetched from hq-API.</p></div><button class="primary" data-action="load-questions">Refresh</button></div>
-<div class="toolbar"><label>Company<input id="qCompany" placeholder="Search company"></label><label>Question type<input id="qType" placeholder="e.g. DSA"></label><label>Sort<select id="qSort"><option value="newest">Newest</option><option value="oldest">Oldest</option></select></label><label>Rows<select id="qLimit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></label><button class="secondary" data-action="clear-q">Clear</button></div>
-<div id="questionMessage" class="message hidden"></div>
-<div class="table-card"><table><thead><tr><th>Question</th><th>Company</th><th>Role</th><th>Type</th><th>Posted</th><th>Experience</th></tr></thead><tbody id="questionRows"></tbody></table></div>
-<div id="questionPagination" class="pagination"></div>
-<article id="questionDetail" class="drawer hidden"></article>
-</section>
-</main></div>
-<div id="toast" class="toast"></div>
-<script src="/api-debugger/api-debugger.js"></script>
-</body></html>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">HQ</div>
+        <div>
+          <strong>ih-api Debugger</strong>
+          <span>Experiences &amp; Questions</span>
+        </div>
+      </div>
+      <div class="api-state">
+        <span id="apiDot"></span>
+        <span id="apiState">Connecting…</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-title">Explore</div>
+      <button class="side-link active" data-tab="experiences">
+        <span>◉</span> Experiences
+      </button>
+      <button class="side-link" data-tab="questions">
+        <span>?</span> Questions
+      </button>
+    </aside>
+
+    <main class="content">
+      <section id="experiences" class="panel active">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">ih-api Debugger / Experiences</div>
+            <h1>Interview Experiences</h1>
+            <p>Browse experiences fetched directly from hq-API.</p>
+          </div>
+          <button class="primary" data-action="load-experiences">Refresh</button>
+        </div>
+
+        <div class="toolbar">
+          <label>
+            Company
+            <input id="expCompany" placeholder="Search company">
+          </label>
+          <label>
+            Sort
+            <select id="expSort">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </label>
+          <label>
+            Rows
+            <select id="expLimit">
+              <option>10</option>
+              <option selected>25</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+          </label>
+          <button class="secondary" data-action="clear-exp">Clear</button>
+        </div>
+
+        <div id="experienceMessage" class="message hidden"></div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Experience</th>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Source</th>
+                <th>Posted</th>
+                <th>Questions</th>
+              </tr>
+            </thead>
+            <tbody id="experienceRows"></tbody>
+          </table>
+        </div>
+
+        <div id="experiencePagination" class="pagination"></div>
+        <article id="experienceDetail" class="drawer hidden"></article>
+      </section>
+
+      <section id="questions" class="panel">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">ih-api Debugger / Questions</div>
+            <h1>Interview Questions</h1>
+            <p>Browse questions fetched directly from hq-API.</p>
+          </div>
+          <button class="primary" data-action="load-questions">Refresh</button>
+        </div>
+
+        <div class="toolbar">
+          <label>
+            Company
+            <input id="qCompany" placeholder="Search company">
+          </label>
+          <label>
+            Question type
+            <input id="qType" placeholder="e.g. DSA">
+          </label>
+          <label>
+            Sort
+            <select id="qSort">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </label>
+          <label>
+            Rows
+            <select id="qLimit">
+              <option>10</option>
+              <option selected>25</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+          </label>
+          <button class="secondary" data-action="clear-q">Clear</button>
+        </div>
+
+        <div id="questionMessage" class="message hidden"></div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Type</th>
+                <th>Posted</th>
+                <th>Experience</th>
+              </tr>
+            </thead>
+            <tbody id="questionRows"></tbody>
+          </table>
+        </div>
+
+        <div id="questionPagination" class="pagination"></div>
+        <article id="questionDetail" class="drawer hidden"></article>
+      </section>
+    </main>
+  </div>
+
+  <script src="/api-debugger/api-debugger.js"></script>
+</body>
+</html>
