@@ -5,14 +5,16 @@ Continue from Part 1. These tasks are part of the same implementation source of 
 ## Progress
 
 - Total: 24
-- Completed: 0
-- Remaining: 24
+- Verified: 0
+- Implemented, CI pending: 6 (T008–T011, T013–T014)
+- Blocked: T012
+- Not started: T015+
 
 ## Task list
 
 ## T008 — Recent questions API
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -72,7 +74,7 @@ Do not fabricate a recent index. Verify the crawler schema/repository and create
 
 ## T009 — Question detail API
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -143,7 +145,7 @@ Do not expose modelName, dedupeHash, or other internal provenance unless explici
 
 ## T010 — Experience questions API
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -202,7 +204,7 @@ Prefer the documented adjacency pattern over client-side question ID iteration.
 
 ## T011 — Experience detail API
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -272,7 +274,7 @@ Do not eagerly load all questions unless a separate endpoint contract requires i
 
 ## T012 — Experience list access path and API
 
-- [ ] Status
+- [!] Status
 
 **Goal**
 
@@ -326,13 +328,13 @@ T003, T005, T007.
 
 **Implementation notes**
 
-The crawler documentation describes experience as a production entity but does not by itself guarantee a global list index. Verify before implementation.
+The crawler schema currently has canonical experience items and a run-to-experience index, but no global time/company experience-list projection. Do not use Scan. This task is blocked until the crawler/database write path provides a Queryable global experience-list projection.
 
 ---
 
 ## T013 — Company-filtered question API
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -387,7 +389,7 @@ Follow the crawler's stored company normalization exactly; do not add fuzzy matc
 
 ## T014 — Question-type filter API
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 

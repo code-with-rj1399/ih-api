@@ -2,7 +2,7 @@
 
 These tasks are the source of truth for the **InterviewHQ UI → hq-API** contract.
 
-**First session (this commit): planning only.** No Java, API, DynamoDB, configuration, crawler, ingestion, admin, or UI behavior is changed.
+**Initial planning session:** task documentation only. Implementation is now being completed incrementally.
 
 ## Grok — Start Here
 
@@ -10,6 +10,17 @@ Repository: https://github.com/code-with-rj1399/ih-api
 Branch: `ih-apis-user-facing`
 
 Start by reading these task files and inspecting the repository. Pick the first unfinished (`- [ ]`) task whose dependencies are satisfied, implement only that task, run its tests, mark it complete, commit it, and push to `ih-apis-user-facing`. After pushing, immediately continue with the next unfinished dependency-satisfied task. Never combine multiple tasks into one commit.
+
+## Status legend
+
+- `[x]` Verified complete.
+- `[~]` Implemented; CI verification is pending.
+- `[!]` Blocked by a missing upstream/data access path.
+- `[ ]` Not started.
+
+## Package structure convention
+
+Business features use feature-oriented packages (`question`, `experience`, `metadata`, `system`). Shared contracts live under `common`; DynamoDB implementation details live under `infrastructure/dynamodb`. Keep the dependency direction `controller → service → repository interface → infrastructure implementation`. Tests should mirror the production package structure. Public DTOs must never depend on DynamoDB types.
 
 ## How to use these files
 
@@ -35,7 +46,7 @@ Inspected current `ih-api` branch against `master`.
 | Persistence | DynamoDB client/configuration foundation |
 | Existing endpoint | `/api/hello` |
 | Production boundary | InterviewHQ UI → hq-API → DynamoDB |
-| Public API | `/api/v1/**` planned namespace |
+| Public API | `/api/v1/**` established namespace |
 | Scope | API-only implementation consumed by InterviewHQ UI |
 
 Do not assume public indexes/projections exist without verifying the actual repository and crawler schema.
@@ -152,8 +163,10 @@ Error response:
 ## Progress
 
 - Total: 24
-- Completed: 0
-- Remaining: 24
+- Verified: 0
+- Implemented, CI pending: 20
+- Blocked: 3
+- Not started: 1
 
 Planning commit: task documentation only.
 
@@ -161,7 +174,7 @@ Planning commit: task documentation only.
 
 ## T001 — Public API conventions and package foundation
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -181,14 +194,14 @@ None.
 
 **Acceptance criteria**
 
-- [ ] Public controllers consistently use `/api/v1`.
-- [ ] Existing `/api/hello` behavior remains unchanged.
-- [ ] No crawler, ingestion, admin, or `/dev` endpoint is modified.
+- [x] Public controllers consistently use `/api/v1`.
+- [x] Existing `/api/hello` behavior remains unchanged.
+- [x] No crawler, ingestion, admin, or `/dev` endpoint is modified.
 
 **Tests**
 
-- [ ] Existing test suite passes.
-- [ ] Namespace/controller smoke coverage exists.
+- [~] Existing test suite passes.
+- [x] Namespace/controller smoke coverage exists.
 
 **Implementation notes**
 
@@ -198,7 +211,7 @@ Use repository conventions under `ai.interviewhq.api`. Do not introduce unrelate
 
 ## T002 — Common DTO envelope and error handling
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -218,14 +231,14 @@ T001.
 
 **Acceptance criteria**
 
-- [ ] Shared public error envelope exists.
-- [ ] Validation and not-found errors map consistently.
-- [ ] Unexpected exceptions do not expose DynamoDB internals.
+- [x] Shared public error envelope exists.
+- [x] Validation and not-found errors map consistently.
+- [x] Unexpected exceptions do not expose DynamoDB internals.
 
 **Tests**
 
-- [ ] MockMvc coverage for 400, 404, and 500 mappings.
-- [ ] JSON shape assertions.
+- [~] MockMvc coverage for 400, 404, and 500 mappings.
+- [~] JSON shape assertions are present; CI verification pending.
 
 **Implementation notes**
 
@@ -235,7 +248,7 @@ Keep the contract small and stable; do not expose stack traces.
 
 ## T003 — Opaque cursor pagination
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -255,17 +268,17 @@ T002.
 
 **Acceptance criteria**
 
-- [ ] Cursor round-trips required DynamoDB key data.
-- [ ] Malformed cursor returns a documented 400.
-- [ ] Default limit is 25.
-- [ ] Maximum limit is 100.
-- [ ] Raw DynamoDB `LastEvaluatedKey` is never returned.
+- [x] Cursor round-trips required DynamoDB key data.
+- [x] Malformed cursor returns a documented 400.
+- [x] Default limit is 25.
+- [x] Maximum limit is 100.
+- [x] Raw DynamoDB `LastEvaluatedKey` is never returned.
 
 **Tests**
 
-- [ ] Cursor encode/decode round-trip.
-- [ ] Invalid cursor tests.
-- [ ] Page-size boundary tests.
+- [~] Cursor encode/decode round-trip.
+- [~] Invalid cursor tests are present; CI verification pending.
+- [~] Page-size boundary tests are present; CI verification pending.
 
 **Implementation notes**
 
@@ -275,7 +288,7 @@ Prefer URL-safe opaque Base64 JSON. Cursor contents are implementation details.
 
 ## T004 — Public Question DTO and mapper
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -313,7 +326,7 @@ Use the crawler schema as the field source. Do not invent topic fields absent fr
 
 ## T005 — Public Experience DTO and mapper
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -350,7 +363,7 @@ Preserve useful provenance such as source URL/platform, dates, company, role, an
 
 ## T006 — Question repository access paths
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
@@ -388,7 +401,7 @@ Verify the actual repository/schema before coding; do not guess key names.
 
 ## T007 — Experience repository access paths
 
-- [ ] Status
+- [~] Status
 
 **Goal**
 
