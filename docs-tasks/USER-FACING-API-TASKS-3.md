@@ -174,10 +174,10 @@ T008, T012.
 
 **Acceptance criteria**
 
-- [ ] Supported sort values are documented.
-- [ ] Sort maps directly to storage ordering.
-- [ ] Unsupported sorts return 400.
-- [ ] No full-result in-memory sorting is used.
+- [x] Supported sort values are documented.
+- [x] Sort maps directly to storage ordering.
+- [x] Unsupported sorts return 400.
+- [x] No full-result in-memory sorting is used.
 
 **Tests**
 
