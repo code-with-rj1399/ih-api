@@ -64,9 +64,12 @@ public class CompanyService {
         replacement.put("slug", normalize(updated));
 
         if (!current.equals(normalize(updated))) {
+            companies.save(replacement);
+            experiences.mergeCompany(currentCompanyName, updated);
             companies.delete(currentCompanyName);
+        } else {
+            companies.save(replacement);
         }
-        companies.save(replacement);
         return toResponse(replacement);
     }
 
