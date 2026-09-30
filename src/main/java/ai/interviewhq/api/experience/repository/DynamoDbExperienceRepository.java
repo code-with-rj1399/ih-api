@@ -31,7 +31,7 @@ public class DynamoDbExperienceRepository implements ExperienceRepository {
 
     public DynamoDbExperienceRepository(
             DynamoDbClient client,
-            @Value("${aws.dynamodb.table}") String table) {
+            @Value("${aws.dynamodb.experience-table}") String table) {
         this.client = client;
         this.table = table;
     }
