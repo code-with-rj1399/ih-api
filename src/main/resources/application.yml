@@ -1,0 +1,35 @@
+server:
+  port: ${SERVER_PORT:8091}
+  shutdown: graceful
+
+spring:
+  application:
+    name: ih-api
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/interviewhq}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      write-date-timestamps-as-nanoseconds: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ih-api
+    description: InterviewHQ backend API
