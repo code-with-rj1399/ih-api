@@ -29,8 +29,9 @@ public class ExperienceController {
     public ApiCollectionResponse<ExperienceSummaryResponse> list(
             @RequestParam(required = false) @Min(1) @Max(100) Integer limit,
             @RequestParam(required = false) @Size(max = 2048) String cursor,
-            @RequestParam(defaultValue = "newest") String sort) {
-        return experiences.list(limit, cursor, sort);
+            @RequestParam(defaultValue = "newest") String sort,
+            @RequestParam(required = false) @Size(max = 200) String company) {
+        return experiences.list(limit, cursor, sort, company);
     }
 
     @GetMapping("/{id}")
