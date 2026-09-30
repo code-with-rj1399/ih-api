@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: stg
+
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  dynamodb:
+    endpoint: ${DYNAMODB_ENDPOINT:}
+    table: ${DYNAMODB_TABLE:interviewhq-stg}
