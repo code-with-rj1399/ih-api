@@ -6,15 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +21,7 @@ import java.util.Optional;
 public class DynamoDbExperienceRepository implements ExperienceRepository {
     private static final String EXPERIENCE_ENTITY_SK = "ENTITY";
     private static final String EXPERIENCE_RUN_PREFIX = "EXPERIENCE_RUN#";
+    private static final String EXPERIENCE_LIST_ENTITY = "ExperienceListIndex";
 
     private final DynamoDbClient client;
     private final String table;
@@ -47,6 +45,43 @@ public class DynamoDbExperienceRepository implements ExperienceRepository {
         return response.hasItem()
                 ? Optional.of(DynamoDbDataMapper.unwrapMap(response.item()))
                 : Optional.empty();
+    }
+
+    @Override
+    public DynamoDbPage<Map<String, Object>> list(
+            String partitionKey,
+            boolean scanForward,
+            int limit,
+            Map<String, String> startKey) {
+        if (partitionKey == null || partitionKey.isBlank()) {
+            return new DynamoDbPage<>(List.of(), Map.of());
+        }
+
+        QueryRequest.Builder query = QueryRequest.builder()
+                .tableName(table)
+                .keyConditionExpression("#pk = :pk")
+                .filterExpression("#entityType = :entityType")
+                .expressionAttributeNames(Map.of("#pk", "pk", "#entityType", "entityType"))
+                .expressionAttributeValues(Map.of(
+                        ":pk", AttributeValue.builder().s(partitionKey).build(),
+                        ":entityType", AttributeValue.builder().s(EXPERIENCE_LIST_ENTITY).build()))
+                .limit(limit)
+                .scanIndexForward(scanForward);
+
+        if (startKey != null && !startKey.isEmpty()) {
+            query.exclusiveStartKey(stringKeyToAttributeKey(startKey));
+        }
+
+        QueryResponse response = client.query(query.build());
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (Map<String, AttributeValue> item : response.items()) {
+            if ("ExperienceListIndex".equals(item.getOrDefault(
+                    "entityType", AttributeValue.builder().s("").build()).s())) {
+                items.add(DynamoDbDataMapper.unwrapMap(item));
+            }
+        }
+
+        return new DynamoDbPage<>(List.copyOf(items), stringKey(response.lastEvaluatedKey()));
     }
 
     @Override
@@ -91,12 +126,12 @@ public class DynamoDbExperienceRepository implements ExperienceRepository {
             return new DynamoDbPage<>(List.of(), stringKey(response.lastEvaluatedKey()));
         }
 
-        BatchGetItemRequest batchRequest = BatchGetItemRequest.builder()
-                .requestItems(Map.of(table, KeysAndAttributes.builder().keys(experienceKeys).build()))
-                .build();
+        var batchResponse = client.batchGetItem(software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest.builder()
+                .requestItems(Map.of(table, software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes.builder()
+                        .keys(experienceKeys).build()))
+                .build());
 
-        var batchResponse = client.batchGetItem(batchRequest);
-        Map<String, Map<String, Object>> byPk = new HashMap<>();
+        Map<String, Map<String, Object>> byPk = new java.util.HashMap<>();
         for (Map<String, AttributeValue> item : batchResponse.responses().getOrDefault(table, List.of())) {
             AttributeValue pk = item.get("pk");
             if (pk != null && pk.s() != null) {
