@@ -28,13 +28,13 @@ class MetadataControllerTest {
         when(service.companies(null, null))
                 .thenReturn(new ApiCollectionResponse<>(
                         List.of(new MetadataItemResponse("Amazon", "amazon")),
-                        new ApiCollectionResponse.Pagination(100, null, false)));
+                        new ApiCollectionResponse.Pagination(25, null, false)));
 
         mvc.perform(get("/api/v1/meta/companies"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].name").value("Amazon"))
                 .andExpect(jsonPath("$.items[0].slug").value("amazon"))
-                .andExpect(jsonPath("$.pagination.limit").value(100));
+                .andExpect(jsonPath("$.pagination.limit").value(25));
     }
 
     @Test
