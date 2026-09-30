@@ -157,7 +157,7 @@ public class DynamoDbQuestionRepository implements QuestionRepository {
 
     private boolean isQuestionItem(Map<String, AttributeValue> item) {
         AttributeValue entityType = item.get("entityType");
-        return entityType != null && "InterviewQuestion".equals(entityType.s());
+        return entityType != null && "QuestionListIndex".equals(entityType.s());
     }
 
     private static Map<String, AttributeValue> key(String pk, String sk) {
