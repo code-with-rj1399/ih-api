@@ -56,7 +56,7 @@ public class DynamoDbCompanyRepository implements CompanyRepository {
 
     @Override
     public void save(Map<String, Object> company) {
-        String companyName = normalize(String.valueOf(company.get("companyName")));
+        String companyName = normalize(String.valueOf(company.get("name")));
         if (companyName == null) throw new IllegalArgumentException("companyName is required");
         client.putItem(PutItemRequest.builder().tableName(table).item(Map.of(
                 "pk", AttributeValue.builder().s(PK).build(),
