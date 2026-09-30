@@ -41,6 +41,7 @@ The API does not require AWS credentials to be committed to the repository.
 This starts DynamoDB Local and the API.
 
 API: http://localhost:8091/api/hello
+API Debugger: http://localhost:8091/api-debugger/
 
 DynamoDB Local: http://localhost:8000
 
