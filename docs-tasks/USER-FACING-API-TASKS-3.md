@@ -50,10 +50,10 @@ T012.
 
 **Acceptance criteria**
 
-- [ ] Company filter uses a Query access path.
-- [ ] Unknown company returns an empty collection.
-- [ ] Pagination works with the filter.
-- [ ] No Scan is used.
+- [x] Company filter uses a Query access path.
+- [x] Unknown company returns an empty collection.
+- [x] Pagination works with the filter.
+- [x] No Scan is used.
 
 **Tests**
 
@@ -63,7 +63,7 @@ T012.
 
 **Implementation notes**
 
-The current source schema does not provide a global company experience-list projection. This task is blocked until the crawler/database write path provides one; hq-API must not fall back to Scan.
+The crawler now provides EINDEX#COMPANY#{normalizedCompany}; hq-API selects that Query partition and never falls back to Scan.
 
 ---
 
