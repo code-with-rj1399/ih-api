@@ -2,6 +2,7 @@ package ai.interviewhq.api.common.exception;
 
 import ai.interviewhq.api.common.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +22,19 @@ public class PublicApiExceptionHandler {
     }
     @ExceptionHandler(PaginationCursorException.class)
     public ResponseEntity<ApiErrorResponse> handleCursor(PaginationCursorException e,HttpServletRequest r){return ResponseEntity.badRequest().body(error("INVALID_CURSOR",e.getMessage(),List.of(),r));}
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolation(
+            ConstraintViolationException e,
+            HttpServletRequest r) {
+        List<ApiErrorResponse.ErrorDetail> details = e.getConstraintViolations().stream()
+                .map(v -> new ApiErrorResponse.ErrorDetail(
+                        v.getPropertyPath().toString(),
+                        v.getMessage()))
+                .toList();
+        return ResponseEntity.badRequest()
+                .body(error("VALIDATION_ERROR", "Request validation failed", details, r));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException e,HttpServletRequest r){return ResponseEntity.badRequest().body(error("VALIDATION_ERROR",e.getMessage(),List.of(),r));}
     @ExceptionHandler(Exception.class)
