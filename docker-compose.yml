@@ -1,12 +1,10 @@
 services:
-  mongodb:
-    image: mongo:8
-    container_name: ih-mongodb
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: ih-dynamodb
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
     ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    restart: unless-stopped
+      - "8000:8000"
 
   api:
     build:
@@ -14,14 +12,15 @@ services:
       dockerfile: Dockerfile
     container_name: ih-api
     depends_on:
-      - mongodb
+      - dynamodb-local
     ports:
       - "8091:8091"
     environment:
       SPRING_PROFILES_ACTIVE: local
       SERVER_PORT: 8091
-      MONGODB_URI: mongodb://mongodb:27017/interviewhq
+      AWS_REGION: ap-south-1
+      AWS_ACCESS_KEY_ID: dummy
+      AWS_SECRET_ACCESS_KEY: dummy
+      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+      DYNAMODB_TABLE: interviewhq-dev
     restart: unless-stopped
-
-volumes:
-  mongodb_data:
