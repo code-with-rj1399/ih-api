@@ -116,5 +116,17 @@ class QuestionControllerTest {
             throw new AssertionError(e);
         }
     }
+    @Test
+    void rejectsOverlongSortBeforeService() {
+        try {
+            mvc.perform(get("/api/v1/questions").param("sort", "x".repeat(21)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+            verifyNoInteractions(service);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
 }
+
 
