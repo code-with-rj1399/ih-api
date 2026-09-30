@@ -1,16 +1,75 @@
 package ai.interviewhq.api.question.mapper;
+
 import ai.interviewhq.api.question.dto.QuestionResponse;
 import ai.interviewhq.api.question.dto.QuestionSummaryResponse;
 import ai.interviewhq.api.question.repository.QuestionListProjection;
+
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+
 public class QuestionMapper {
-    public QuestionResponse toResponse(java.util.Map<String,Object> d){
-        return new QuestionResponse(asInt(d,"id"),asInt(d,"experienceId"),asString(d,"problemUrl"),strings(d,"questionTypes"),asString(d,"difficulty"),asString(d,"questionText"),asString(d,"questionDescription"),asString(d,"candidateApproach"),asFloat(d,"confidence"),asString(d,"questionParticularity"),instant(d,"extractedAt"),instant(d,"createdAt"));
+
+    public QuestionResponse toResponse(Map<String, Object> data) {
+        return new QuestionResponse(
+                asInteger(data, "id"),
+                asInteger(data, "experienceId"),
+                asString(data, "problemUrl"),
+                asStrings(data, "questionTypes"),
+                asString(data, "difficulty"),
+                asString(data, "questionText"),
+                asString(data, "questionDescription"),
+                asString(data, "candidateApproach"),
+                asFloat(data, "confidence"),
+                asString(data, "questionParticularity"),
+                asInstant(data, "extractedAt"),
+                asInstant(data, "createdAt"));
     }
-    public QuestionSummaryResponse toSummary(QuestionListProjection p){return new QuestionSummaryResponse(p.id(),p.experienceId(),p.questionText(),p.questionTypes()==null?List.of():List.copyOf(p.questionTypes()),p.confidence(),p.problemUrl(),p.extractedAt(),p.postedAt(),p.company(),p.role(),p.sourcePlatform());}
-    private static String asString(java.util.Map<String,Object>d,String k){Object v=d.get(k);return v==null?null:String.valueOf(v);}
-    private static Integer asInt(java.util.Map<String,Object>d,String k){Object v=d.get(k);return v==null?null:Integer.valueOf(String.valueOf(v));}
-    private static Float asFloat(java.util.Map<String,Object>d,String k){Object v=d.get(k);return v==null?null:Float.valueOf(String.valueOf(v));}
-    private static java.time.Instant instant(java.util.Map<String,Object>d,String k){String v=asString(d,k);return v==null?null:java.time.Instant.parse(v);}
-    private static List<String> strings(java.util.Map<String,Object>d,String k){Object v=d.get(k);if(!(v instanceof List<?> l))return List.of();return l.stream().map(String::valueOf).toList();}
+
+    public QuestionSummaryResponse toSummary(QuestionListProjection projection) {
+        return new QuestionSummaryResponse(
+                projection.id(),
+                projection.experienceId(),
+                projection.questionText(),
+                projection.questionTypes() == null
+                        ? List.of()
+                        : List.copyOf(projection.questionTypes()),
+                projection.confidence(),
+                projection.problemUrl(),
+                projection.extractedAt(),
+                projection.postedAt(),
+                projection.company(),
+                projection.role(),
+                projection.sourcePlatform());
+    }
+
+    private static String asString(Map<String, Object> data, String key) {
+        Object value = data.get(key);
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static Integer asInteger(Map<String, Object> data, String key) {
+        Object value = data.get(key);
+        return value == null ? null : Integer.valueOf(String.valueOf(value));
+    }
+
+    private static Float asFloat(Map<String, Object> data, String key) {
+        Object value = data.get(key);
+        return value == null ? null : Float.valueOf(String.valueOf(value));
+    }
+
+    private static Instant asInstant(Map<String, Object> data, String key) {
+        String value = asString(data, key);
+        return value == null ? null : Instant.parse(value);
+    }
+
+    private static List<String> asStrings(Map<String, Object> data, String key) {
+        Object value = data.get(key);
+        if (!(value instanceof List<?> values)) {
+            return List.of();
+        }
+        return values.stream()
+                .map(String::valueOf)
+                .toList();
+    }
 }
