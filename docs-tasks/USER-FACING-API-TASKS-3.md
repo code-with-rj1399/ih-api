@@ -395,10 +395,10 @@ T008, T009.
 
 **Acceptance criteria**
 
-- [ ] Allowed origins are environment-configurable.
-- [ ] Production can restrict origins.
-- [ ] Credentialed wildcard CORS is not enabled.
-- [ ] Existing API behavior remains unchanged.
+- [x] Allowed origins are environment-configurable.
+- [x] Production can restrict origins.
+- [x] Credentialed wildcard CORS is not enabled.
+- [x] Existing API behavior remains unchanged.
 
 **Tests**
 
