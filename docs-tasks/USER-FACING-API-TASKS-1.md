@@ -2,7 +2,7 @@
 
 These tasks are the source of truth for the **InterviewHQ UI → hq-API** contract.
 
-**First session (this commit): planning only.** No Java, API, DynamoDB, configuration, crawler, ingestion, admin, or UI behavior is changed.
+**Initial planning session:** task documentation only. Implementation is now being completed incrementally.
 
 ## Grok — Start Here
 
@@ -35,7 +35,7 @@ Inspected current `ih-api` branch against `master`.
 | Persistence | DynamoDB client/configuration foundation |
 | Existing endpoint | `/api/hello` |
 | Production boundary | InterviewHQ UI → hq-API → DynamoDB |
-| Public API | `/api/v1/**` planned namespace |
+| Public API | `/api/v1/**` established namespace |
 | Scope | API-only implementation consumed by InterviewHQ UI |
 
 Do not assume public indexes/projections exist without verifying the actual repository and crawler schema.
@@ -152,8 +152,8 @@ Error response:
 ## Progress
 
 - Total: 24
-- Completed: 0
-- Remaining: 24
+- Completed: 1
+- Remaining: 23
 
 Planning commit: task documentation only.
 
@@ -161,7 +161,7 @@ Planning commit: task documentation only.
 
 ## T001 — Public API conventions and package foundation
 
-- [ ] Status
+- [x] Status
 
 **Goal**
 
@@ -181,14 +181,14 @@ None.
 
 **Acceptance criteria**
 
-- [ ] Public controllers consistently use `/api/v1`.
-- [ ] Existing `/api/hello` behavior remains unchanged.
-- [ ] No crawler, ingestion, admin, or `/dev` endpoint is modified.
+- [x] Public controllers consistently use `/api/v1`.
+- [x] Existing `/api/hello` behavior remains unchanged.
+- [x] No crawler, ingestion, admin, or `/dev` endpoint is modified.
 
 **Tests**
 
-- [ ] Existing test suite passes.
-- [ ] Namespace/controller smoke coverage exists.
+- [x] Existing test suite passes.
+- [x] Namespace/controller smoke coverage exists.
 
 **Implementation notes**
 
