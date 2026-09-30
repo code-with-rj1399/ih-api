@@ -31,7 +31,7 @@ class DynamoDbMetadataRepositoryTest {
                                 "sk", AttributeValue.builder().s("COMPANY#acme").build()))
                         .build());
 
-        var result = new DynamoDbMetadataRepository(client, "table")
+        var result = new DynamoDbMetadataRepository(client, "experience-table", "question-table")
                 .list("META#COMPANIES", 100,
                         Map.of("pk", "META#COMPANIES", "sk", "COMPANY#abc"));
 
