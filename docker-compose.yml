@@ -1,0 +1,27 @@
+services:
+  mongodb:
+    image: mongo:8
+    container_name: ih-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ih-api
+    depends_on:
+      - mongodb
+    ports:
+      - "8091:8091"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8091
+      MONGODB_URI: mongodb://mongodb:27017/interviewhq
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
