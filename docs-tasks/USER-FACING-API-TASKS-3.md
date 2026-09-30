@@ -1,281 +1,414 @@
-# InterviewHQ User-Facing API Tasks — Part 3 (Validation, performance, observability, docs, debugger)
+# InterviewHQ hq-API — User-Facing API Implementation Tasks — Part 3
+
+Continue from Parts 1–2. These tasks remain API-only and are intended to be implemented sequentially.
+
+## Progress
+
+- Total: 24
+- Completed: 0
+- Remaining: 24
+
+## Task list
+
+## T015 — Experience company filter API
+
+- [ ] Status
+
+**Goal**
+
+Support company filtering on the experience collection when DynamoDB provides an efficient access path.
+
+**API responsibility**
+
+Allows the UI to browse interview experiences for a company.
+
+**Endpoints**
+
+`GET /api/v1/experiences?company={company}`
+
+**Request contract**
+
+`company` is optional, trimmed, and length-bounded. Existing limit/cursor/sort parameters remain supported.
+
+**Response contract**
+
+Common collection envelope with only matching experiences.
+
+**Error contract**
+
+400 for invalid filter/cursor/limit/sort; 500 for unexpected failures.
+
+**DynamoDB access pattern**
+
+Use a verified company experience Query/projection. Never Scan.
+
+**Dependencies**
+
+T012.
+
+**Acceptance criteria**
+
+- [ ] Company filter uses a Query access path.
+- [ ] Unknown company returns an empty collection.
+- [ ] Pagination works with the filter.
+- [ ] No Scan is used.
+
+**Tests**
+
+- [ ] MockMvc company-filter test.
+- [ ] Repository Query test.
+- [ ] Pagination test.
+
+**Implementation notes**
+
+If the source schema lacks the required projection, create that explicit access-path task before this API implementation.
 
 ---
 
-## T013 — Request validation hardening and ID rules
+## T016 — Public metadata/facet APIs
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Centralise validation for path IDs, query params, and reject unsafe inputs consistently.
+**Goal**
 
-### API responsibility
-Safe, predictable 400 responses for all public endpoints.
+Expose bounded company and question-type metadata needed by UI filters.
 
-### Endpoints
-Applies to all `/api/v1/**` endpoints defined in prior tasks.
+**API responsibility**
 
-### Request contract
-Rules:
-- Path `id`: non-blank, max length 128, allowed charset `[A-Za-z0-9_-]` (or match crawler id format).
-- `limit`: 1–50 (lists) or 1–200 (meta).
-- `sort`: only documented enums.
-- `company` / `type`: max length 100, trimmed; reject empty after trim.
-- `cursor`: max length bound (e.g. 2048); invalid → INVALID_CURSOR.
+Lets the UI populate filter selectors without scanning large question/experience collections.
 
-### Response contract
-Error envelope from T002.
+**Endpoints**
 
-### Error contract
-All validation failures → 400 with `VALIDATION_ERROR` or `INVALID_CURSOR`.
+`GET /api/v1/meta/companies`  
+`GET /api/v1/meta/question-types`
 
-### DynamoDB access pattern
-N/A (pre-query validation)
+**Request contract**
 
-### Dependencies
-T002, T003, T006–T012
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | integer | 100 | bounded |
+| `cursor` | string | null | opaque |
 
-### Acceptance criteria
-- Bean Validation and/or explicit guards on every public controller method.
-- No DynamoDB call on clearly invalid input.
-- Consistent messages via error envelope.
+**Response contract**
 
-### Testing requirements
-- Parameterised MockMvc tests for invalid id, limit=0, limit=51, bad sort, oversized cursor.
+```json
+{
+  "items": [
+    { "name": "Amazon", "slug": "amazon" }
+  ],
+  "pagination": {
+    "limit": 100,
+    "nextCursor": null,
+    "hasMore": false
+  }
+}
+```
 
-### Implementation notes
-- Prefer `@Validated` + constraint annotations on request records.
-- Do not expose internal constraint names in `message` if avoidable; use clear public text.
+**Error contract**
 
----
+400 for invalid limit/cursor; 500 for unexpected failures.
 
-## T014 — Performance: response size, BatchGet, and query bounds
+**DynamoDB access pattern**
 
-Status: NOT_STARTED
+Prefer dedicated materialized metadata/access-path items. A large Scan of questions or experiences on every request is prohibited.
 
-### Objective
-Ensure list and nested endpoints stay within bounded latency and payload size for production traffic.
+**Dependencies**
 
-### API responsibility
-Production-ready read path characteristics for user-facing APIs.
+T003, T013, T014.
 
-### Endpoints
-All collection and nested list endpoints.
+**Acceptance criteria**
 
-### Request contract
-N/A (behavioural)
+- [ ] Results are deterministic.
+- [ ] No unbounded Scan is used.
+- [ ] Values correspond to supported stored data/taxonomy.
+- [ ] Pagination or a documented bounded result is implemented.
 
-### Response contract
-- List item DTOs should omit bulky optional fields if not needed for list views (e.g. long `description` can be detail-only) — document slim vs full.
-- Max page size remains 50.
+**Tests**
 
-### Error contract
-Unchanged; timeouts surface as 500 without internal detail.
+- [ ] MockMvc response tests.
+- [ ] Repository/access-path tests.
 
-### DynamoDB access pattern
-- Always Query/GetItem/BatchGetItem with Limit.
-- Experience questions: BatchGetItem in chunks ≤ 100, still capped by API `limit`.
-- Avoid loading related entities unless the endpoint requires them.
-- No N+1 GetItem in loops without batching.
+**Implementation notes**
 
-### Dependencies
-T005–T012
-
-### Acceptance criteria
-- Code review checklist: no Scan for user paths; no unbounded loops of GetItem.
-- Slim list DTO used for `GET /api/v1/questions` if full description is large.
-- Integration or unit test proving BatchGet path for experience questions.
-
-### Testing requirements
-- Unit test that repository list methods set Limit.
-- Test BatchGet batching boundary.
-
-### Implementation notes
-- Consider future cache headers only if measured need; not required in this task.
-- Keep single-table Query patterns from schema GSIs.
+Do not invent a search index or external system for metadata.
 
 ---
 
-## T015 — Observability for public APIs
+## T017 — Public sorting contract
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Add structured logging and basic metrics hooks for public API latency and DynamoDB failures.
+**Goal**
 
-### API responsibility
-Operability of user-facing endpoints.
+Standardize supported sorting for question and experience collections.
 
-### Endpoints
-All `/api/v1/**`
+**API responsibility**
 
-### Request contract
-N/A
+Provides deterministic ordering requested by UI consumers.
 
-### Response contract
-N/A (logging only)
+**Endpoints**
 
-### Error contract
-Errors still use public envelope; logs may include exception class + message server-side.
+Applies to relevant collection endpoints.
 
-### DynamoDB access pattern
-Log failed Query/GetItem (table, operation, error code) without logging full item payloads or credentials.
+**Request contract**
 
-### Dependencies
-T006–T012
+Supported sort values must be explicit, for example `newest` and `oldest`, only where the backing access path supports them.
 
-### Acceptance criteria
-- Request log line or structured fields: method, path, status, duration ms.
-- DynamoDB failures logged at ERROR with correlation-friendly message.
-- Actuator health remains available; no requirement for custom metrics backend in this task (Micrometer counters optional).
+**Response contract**
 
-### Testing requirements
-- Smoke test that successful request does not error.
-- Optional: assert logger invoked on forced repository failure (mock).
+Same collection envelope.
 
-### Implementation notes
-- Use SLF4J; avoid logging PII (none expected on these APIs).
-- Filter or interceptor preferred over copy-paste in every controller.
+**Error contract**
 
----
+400 for unsupported sort values.
 
-## T016 — Public API documentation (Markdown contract)
+**DynamoDB access pattern**
 
-Status: NOT_STARTED
+Map sort to Query direction/order. Do not retrieve a large collection and sort it in memory.
 
-### Objective
-Maintain human-readable API contract documentation for all user-facing endpoints.
+**Dependencies**
 
-### API responsibility
-Single source of truth for UI and debugger consumers.
+T008, T012.
 
-### Endpoints
-Documents every endpoint from T006–T012 and T010.
+**Acceptance criteria**
 
-### Request contract
-Documented per endpoint in `docs/PUBLIC-API.md` (create under repo `docs/`).
+- [ ] Supported sort values are documented.
+- [ ] Sort maps directly to storage ordering.
+- [ ] Unsupported sorts return 400.
+- [ ] No full-result in-memory sorting is used.
 
-### Response contract
-Examples matching implementation DTOs.
+**Tests**
 
-### Error contract
-Document shared error envelope and status codes.
+- [ ] Controller validation tests.
+- [ ] Repository sort-direction tests.
 
-### DynamoDB access pattern
-Brief note per endpoint (Query vs GetItem) for implementers; not required for external clients.
+**Implementation notes**
 
-### Dependencies
-T006–T012, T003
-
-### Acceptance criteria
-- File `docs/PUBLIC-API.md` covers: base URL, auth (none for public reads), pagination, filters, sorting, each endpoint, errors, example curl.
-- Matches actual path names and field names.
-
-### Testing requirements
-- Manual review against controllers (no automated OpenAPI required in this task).
-
-### Implementation notes
-- Optional later: springdoc OpenAPI; out of scope unless trivial.
-- Keep docs in sync when contracts change.
+Do not expose arbitrary sort fields unless the schema can support them efficiently.
 
 ---
 
-## T017 — Static debugger HTML for manual API testing
+## T018 — Combined filters and DynamoDB access-pattern rules
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Add a static HTML page that calls the user-facing APIs so developers can exercise the API without a full UI.
+**Goal**
 
-### API responsibility
-Developer testing surface only (static assets + same public APIs). **Not** an admin UI and **not** crawler tooling.
+Define and implement efficient behavior for filter combinations such as company + type.
 
-### Endpoints
-Consumed (client-side):
-- `GET /api/v1/questions`
-- `GET /api/v1/questions/{id}`
-- `GET /api/v1/questions?company=`
-- `GET /api/v1/experiences` (if available)
-- `GET /api/v1/experiences/{id}`
-- `GET /api/v1/experiences/{id}/questions`
-- `GET /api/v1/meta/companies`
-- `GET /api/v1/meta/question-types`
+**API responsibility**
 
-Served as static file, e.g.:
-- `GET /debugger` or `GET /debugger/index.html` via Spring static resources.
+Prevents public APIs from degrading into scans when multiple filters are applied.
 
-### Request contract
-HTML form fields for: base URL (default same origin), company, type, limit, cursor, question id, experience id.
+**Endpoints**
 
-### Response contract
-Display raw JSON response in a `<pre>` panel; show HTTP status.
+Primarily `GET /api/v1/questions` and `GET /api/v1/experiences`.
 
-### Error contract
-Show API error JSON as returned.
+**Request contract**
 
-### DynamoDB access pattern
-N/A (browser → API only)
+Combined filters are accepted only where a documented efficient access path exists.
 
-### Dependencies
-T006–T012, T010
+**Response contract**
 
-### Acceptance criteria
-- Static HTML under `src/main/resources/static/debugger/index.html` (or equivalent).
-- Page works when API is running locally (CORS not required if same origin).
-- No credentials, no admin actions, no write operations.
-- README section: how to open `/debugger`.
+Common collection envelope.
 
-### Testing requirements
-- Manual verification sufficient; optional WebMvcTest that static resource is mapped.
+**Error contract**
 
-### Implementation notes
-- Pure HTML/JS; no React/Next.js build.
-- Keep UI minimal: inputs + “Fetch” buttons + JSON output.
-- Do not place under `/admin` or `/dev` API namespaces; static `/debugger` is acceptable for local testing.
+Use a clear 400 error code for an unsupported expensive combination instead of falling back to Scan.
+
+**DynamoDB access pattern**
+
+Choose the most selective supported partition. Apply only bounded residual predicates when appropriate. Never Scan to rescue an unsupported combination.
+
+**Dependencies**
+
+T013, T014, T015, T017.
+
+**Acceptance criteria**
+
+- [ ] Supported combinations choose a documented Query partition.
+- [ ] Residual filtering is bounded.
+- [ ] Unsupported expensive combinations return a clear client error.
+- [ ] Cursor behavior remains correct.
+
+**Tests**
+
+- [ ] Combination tests.
+- [ ] Repository access-path verification.
+
+**Implementation notes**
+
+DynamoDB limitations are part of the public API contract.
 
 ---
 
-## T018 — Integration / contract tests for public read APIs
+## T019 — Request bounds and validation hardening
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Add automated tests that lock the public contracts (status codes, JSON shapes, pagination fields).
+**Goal**
 
-### API responsibility
-Regression safety for UI consumers.
+Apply consistent bounds to anonymous public read requests.
 
-### Endpoints
-Cover at least:
-- `GET /api/v1/questions`
-- `GET /api/v1/questions/{id}`
-- `GET /api/v1/questions?company=Amazon`
-- `GET /api/v1/experiences/{id}` (404 path)
-- Error paths: bad limit, bad cursor, missing id
+**API responsibility**
 
-### Request contract
-As specified in prior tasks.
+Prevents pathological requests and keeps DynamoDB work bounded.
 
-### Response contract
-Assert presence of `data`, `pagination.limit`, `pagination.hasMore`; question fields `id`, `text`/`company` as applicable.
+**Endpoints**
 
-### Error contract
-Assert `error.code` on 400/404.
+All `/api/v1/**`.
 
-### DynamoDB access pattern
-Prefer mocked repository/service for pure contract tests; optional `@SpringBootTest` with DynamoDB Local if already in docker-compose.
+**Request contract**
 
-### Dependencies
-T006–T013
+At minimum:
 
-### Acceptance criteria
-- Tests fail if public JSON field names change unexpectedly.
-- CI-friendly (no real AWS required).
+- `limit`: 1–100
+- `cursor`: length-bounded, opaque
+- IDs: non-blank and length-bounded
+- string filters: trimmed and length-bounded
+- sort/type values: validated against supported values
 
-### Testing requirements
-- JUnit 5 + MockMvc (and/or WebTestClient).
-- At least one happy path and one error path per major endpoint group.
+**Response contract**
 
-### Implementation notes
-- Reuse fixtures from mapper tests.
-- Do not test crawler or ingestion.
+Common error envelope.
+
+**Error contract**
+
+Invalid requests return 400 before DynamoDB access.
+
+**DynamoDB access pattern**
+
+Validation happens before any DynamoDB operation.
+
+**Dependencies**
+
+T002, T003, T008, T009, T012, T013, T014, T015, T017, T018.
+
+**Acceptance criteria**
+
+- [ ] Every public endpoint has validation.
+- [ ] Invalid requests do not invoke repositories.
+- [ ] Limits are enforced consistently.
+- [ ] Public error messages are actionable without leaking internals.
+
+**Tests**
+
+- [ ] Parameterized MockMvc tests.
+- [ ] Verify no repository call for invalid input.
+
+**Implementation notes**
+
+Do not add a full authentication system in this task.
+
+---
+
+## T020 — Public API observability
+
+- [ ] Status
+
+**Goal**
+
+Add lightweight request and DynamoDB failure observability for `/api/v1`.
+
+**API responsibility**
+
+Provides production diagnostics without logging raw interview content.
+
+**Endpoints**
+
+All `/api/v1/**`.
+
+**Request contract**
+
+N/A.
+
+**Response contract**
+
+No public shape change.
+
+**Error contract**
+
+Existing public error envelope remains unchanged.
+
+**DynamoDB access pattern**
+
+Failed Query/GetItem/BatchGetItem operations log operation context and failure type without item payloads or credentials.
+
+**Dependencies**
+
+T008, T009, T010, T011, T012.
+
+**Acceptance criteria**
+
+- [ ] Method/path/status/duration are observable.
+- [ ] DynamoDB failures include useful operation context.
+- [ ] Question/experience bodies are not dumped to logs.
+
+**Tests**
+
+- [ ] Request smoke test.
+- [ ] Repository-failure path test where practical.
+
+**Implementation notes**
+
+Use existing SLF4J/Actuator conventions. Do not add new observability infrastructure.
+
+---
+
+## T021 — CORS and browser access configuration
+
+- [ ] Status
+
+**Goal**
+
+Configure safe browser access for the future InterviewHQ UI.
+
+**API responsibility**
+
+Allows configured browser origins to call the public API.
+
+**Endpoints**
+
+All `/api/v1/**`.
+
+**Request contract**
+
+Standard browser GET/OPTIONS behavior.
+
+**Response contract**
+
+Normal API responses plus CORS headers where applicable.
+
+**Error contract**
+
+No change to API errors.
+
+**DynamoDB access pattern**
+
+N/A.
+
+**Dependencies**
+
+T008, T009.
+
+**Acceptance criteria**
+
+- [ ] Allowed origins are environment-configurable.
+- [ ] Production can restrict origins.
+- [ ] Credentialed wildcard CORS is not enabled.
+- [ ] Existing API behavior remains unchanged.
+
+**Tests**
+
+- [ ] CORS preflight test.
+- [ ] Configured-origin response test.
+
+**Implementation notes**
+
+Use Spring's existing web configuration conventions.
+
+---
+
+## Definition of Done
+
+All tasks in this part are complete only when their acceptance criteria and tests pass, their status is checked, and the implementation continues to obey the API-only architecture in Part 1.

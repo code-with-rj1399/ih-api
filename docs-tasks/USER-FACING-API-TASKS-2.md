@@ -1,386 +1,445 @@
-# InterviewHQ User-Facing API Tasks — Part 2 (Questions listing & company filters)
+# InterviewHQ hq-API — User-Facing API Implementation Tasks — Part 2
 
----
+Continue from Part 1. These tasks are part of the same implementation source of truth.
 
-## T007 — GET /api/v1/questions — recent questions list
+## Progress
 
-Status: NOT_STARTED
+- Total: 24
+- Completed: 0
+- Remaining: 24
 
-### Objective
-List recent interview questions with cursor pagination.
+## Task list
 
-### API responsibility
-Primary feed for “Recent Questions” and home discovery.
+## T008 — Recent questions API
 
-### Endpoints
+- [ ] Status
+
+**Goal**
+
+Expose the primary recent-questions collection.
+
+**API responsibility**
+
+Allows the InterviewHQ UI to retrieve recent interview questions with stable cursor pagination.
+
+**Endpoints**
+
 `GET /api/v1/questions`
 
-### Request contract
-| Name | Type | Required | Default | Validation |
-|------|------|----------|---------|------------|
-| `limit` | int | no | 20 | 1–50 |
-| `cursor` | string | no | — | opaque |
-| `sort` | string | no | `newest` | `newest` \| `oldest` |
+**Request contract**
 
-### Response contract
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | integer | 25 | 1–100 |
+| `cursor` | string | null | opaque |
+| `sort` | string | newest | supported values documented by T017 |
+
+**Response contract**
+
+Use the common collection envelope from Part 1. List items should use a bounded/slim Question representation.
+
+**Error contract**
+
+400 for invalid limit, cursor, or sort. 500 for unexpected failures.
+
+**DynamoDB access pattern**
+
+Use a verified recent-question Query/projection. `ScanIndexForward=false` for newest when supported. Never Scan.
+
+**Dependencies**
+
+T003, T004, T006.
+
+**Acceptance criteria**
+
+- [ ] Newest is the default order.
+- [ ] Cursor pagination works across pages.
+- [ ] Empty result is a successful empty collection.
+- [ ] No Scan is used.
+
+**Tests**
+
+- [ ] MockMvc happy path.
+- [ ] Pagination test.
+- [ ] Empty-result test.
+- [ ] Repository Query test.
+
+**Implementation notes**
+
+Do not fabricate a recent index. Verify the crawler schema/repository and create an explicit access-path task if required.
+
+---
+
+## T009 — Question detail API
+
+- [ ] Status
+
+**Goal**
+
+Expose one interview question by id.
+
+**API responsibility**
+
+Allows the UI to open a question detail view.
+
+**Endpoints**
+
+`GET /api/v1/questions/{id}`
+
+**Request contract**
+
+`id` is required and validated before any DynamoDB read.
+
+**Response contract**
+
 ```json
 {
-  "data": [
-    {
-      "id": "8a91c7...",
-      "text": "Design a notification system.",
-      "type": "System Design",
-      "company": "Amazon",
-      "topics": ["Notifications"],
-      "postedAt": "2026-09-23T10:20:00Z",
-      "sourceName": "Example",
-      "sourceUrl": "https://..."
-    }
-  ],
-  "pagination": {
-    "limit": 20,
-    "nextCursor": "...",
-    "hasMore": true
+  "item": {
+    "id": "123",
+    "experienceId": "exp-1",
+    "questionText": "Design a notification system.",
+    "questionDescription": "...",
+    "questionTypes": ["System Design"],
+    "difficulty": "Medium",
+    "candidateApproach": null,
+    "confidence": 0.92,
+    "questionParticularity": "SPECIFIC",
+    "problemUrl": null,
+    "extractedAt": "2026-09-30T08:00:00Z",
+    "createdAt": "2026-09-30T08:00:00Z"
   }
 }
 ```
-List items may be a slim projection (subset of full Question DTO) if desired; full fields allowed.
 
-### Error contract
-- 400 VALIDATION_ERROR / INVALID_CURSOR / unsupported `sort`
-- 500 INTERNAL_ERROR
+**Error contract**
 
-### DynamoDB access pattern
-Query time-ordered index (schema: recent-by-type GSI2 or equivalent recent projection).  
-`ScanIndexForward = false` for `newest`, `true` for `oldest`.  
-Cursor = opaque encoding of `LastEvaluatedKey`.  
-**No Scan.**
+404 when the question does not exist; 400 for invalid id; 500 for unexpected failures.
 
-### Dependencies
-T003, T004, T005
+**DynamoDB access pattern**
 
-### Acceptance criteria
-- Returns page of questions newest-first by default.
-- Pagination works across at least two pages when data exists.
-- Empty table → `data: []`, `hasMore: false`.
+Question ID lookup followed by canonical question read as documented by crawler schema.
 
-### Testing requirements
-- MockMvc with mocked service/repository.
-- Unit test for sort direction mapping.
+**Dependencies**
 
-### Implementation notes
-- If a pure global “recent” GSI is missing, document and implement against the best existing GSI (e.g. fixed type partition or company-agnostic pattern from schema); do not Scan.
+T002, T004, T006.
 
----
+**Acceptance criteria**
 
-## T008 — GET /api/v1/questions?company= — filter by company
+- [ ] Public Question DTO is returned.
+- [ ] Missing resource is 404.
+- [ ] DynamoDB keys and internal storage fields are hidden.
 
-Status: NOT_STARTED
+**Tests**
 
-### Objective
-Filter the questions list by company using an efficient GSI Query.
+- [ ] MockMvc 200/404.
+- [ ] Invalid-id test.
+- [ ] Service/repository test.
 
-### API responsibility
-Company pages (e.g. `/google-interview-questions` UI equivalent).
+**Implementation notes**
 
-### Endpoints
-Same collection endpoint with query param:
-`GET /api/v1/questions?company={company}`
-
-### Request contract
-| Name | Type | Required | Default | Validation |
-|------|------|----------|---------|------------|
-| `company` | string | no | — | non-blank when present; case-normalise (e.g. trim) |
-| `limit` | int | no | 20 | 1–50 |
-| `cursor` | string | no | — | opaque |
-| `sort` | string | no | `newest` | `newest` \| `oldest` |
-
-When `company` is absent, behaviour is T007 (global recent).
-
-### Response contract
-Same envelope as T007; all items must match the requested company.
-
-### Error contract
-- 400 if `company` is blank string
-- Same pagination/sort errors as T007
-
-### DynamoDB access pattern
-Schema: **GSI1 — recent company questions**  
-`GSI1PK = COMPANY#{company}` (or equivalent documented key), SK ordered by `postedAt` / question id.  
-Query GSI1 with `ScanIndexForward` per `sort`.  
-Cursor must include GSI keys used.
-
-### Dependencies
-T007
-
-### Acceptance criteria
-- Company filter uses Query on GSI1, not filter-expression on a scan.
-- Combined with limit/cursor correctly.
-- Unknown company → empty page, not 404.
-
-### Testing requirements
-- MockMvc: with company, without company, invalid limit.
-- Verify repository builds correct GSI key condition.
-
-### Implementation notes
-- Normalise company for key construction (consistent casing strategy, e.g. as stored by crawler).
-- Do not invent fuzzy company search in this task.
+Do not expose modelName, dedupeHash, or other internal provenance unless explicitly approved as a public field.
 
 ---
 
-## T009 — GET /api/v1/questions?type= — filter by question type
+## T010 — Experience questions API
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Filter questions by `questionType` (e.g. System Design, Coding) via GSI.
+**Goal**
 
-### API responsibility
-Discovery by question category.
+Expose questions belonging to one interview experience.
 
-### Endpoints
-`GET /api/v1/questions?type={type}`  
-(combinable with `company` only if both can be satisfied efficiently; otherwise document mutual exclusion or preferred single dimension).
+**API responsibility**
 
-### Request contract
-| Name | Type | Required | Validation |
-|------|------|----------|------------|
-| `type` | string | no | non-blank when present |
-| `company` | string | no | see T008 |
-| `limit`, `cursor`, `sort` | | | same as T007 |
+Allows a UI experience page to load its questions as one API resource.
 
-**Filter interaction rule:**  
-- `company` alone → GSI1  
-- `type` alone → GSI2 (schema: recent by type)  
-- both together: if no composite index exists, prefer `company` as partition and FilterExpression on type **only when result set is expected small**; otherwise return 400 UNSUPPORTED_FILTER_COMBINATION. Prefer not to FilterExpression on large partitions.
+**Endpoints**
 
-### Response contract
-Same as T007; items match filter(s).
+`GET /api/v1/experiences/{id}/questions`
 
-### Error contract
-- 400 VALIDATION_ERROR / UNSUPPORTED_FILTER_COMBINATION when both filters cannot be served efficiently
-- 400 invalid sort/cursor/limit
+**Request contract**
 
-### DynamoDB access pattern
-Schema: **GSI2 — recent questions by type**  
-`GSI2PK` ≈ type dimension, SK time-ordered.  
-Query only; no Scan.
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `id` | string | — | required |
+| `limit` | integer | 25 | 1–100 |
+| `cursor` | string | null | opaque |
 
-### Dependencies
-T007, T008
+**Response contract**
 
-### Acceptance criteria
-- Type-only list uses GSI2 Query.
-- Documented behaviour for company+type combination.
-- Empty match → empty page.
+Common collection envelope with Question DTOs.
 
-### Testing requirements
-- Unit/MockMvc for type filter and unsupported combination if enforced.
+**Error contract**
 
-### Implementation notes
-- Allowed type values are free-form strings matching stored `questionType` (no hard enum unless product later freezes one).
+404 for missing experience when existence is checked; 400 for invalid input/cursor; 500 for unexpected failures.
+
+**DynamoDB access pattern**
+
+Query `PK=EXPERIENCE#{id}` with `SK begins_with QUESTION#`. Do not issue one GetItem per question.
+
+**Dependencies**
+
+T003, T004, T006, T007.
+
+**Acceptance criteria**
+
+- [ ] Query uses the experience partition.
+- [ ] Pagination is cursor-based.
+- [ ] No unbounded N+1 reads.
+- [ ] Resource existence behavior is explicit.
+
+**Tests**
+
+- [ ] MockMvc pagination tests.
+- [ ] Verify Query key condition.
+- [ ] Empty-result test.
+
+**Implementation notes**
+
+Prefer the documented adjacency pattern over client-side question ID iteration.
 
 ---
 
-## T010 — Company and type metadata endpoints (lightweight discovery)
+## T011 — Experience detail API
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Provide minimal discovery lists so the UI can populate company/type filters without scanning all questions.
+**Goal**
 
-### API responsibility
-Filter facet values for the public UI.
+Expose a single interview experience.
 
-### Endpoints
-- `GET /api/v1/meta/companies`
-- `GET /api/v1/meta/question-types`
+**API responsibility**
 
-### Request contract
-| Name | Type | Default | Validation |
-|------|------|---------|------------|
-| `limit` | int | 100 | 1–200 |
-| `cursor` | string | — | opaque |
+Allows the UI to open an interview experience/story.
 
-### Response contract
+**Endpoints**
+
+`GET /api/v1/experiences/{id}`
+
+**Request contract**
+
+Required path `id`.
+
+**Response contract**
+
 ```json
 {
-  "data": [
-    { "name": "Google", "slug": "google" },
-    { "name": "Amazon", "slug": "amazon" }
-  ],
-  "pagination": {
-    "limit": 100,
-    "nextCursor": null,
-    "hasMore": false
-  }
-}
-```
-Types:
-```json
-{
-  "data": [
-    { "name": "System Design" },
-    { "name": "Coding" }
-  ],
-  "pagination": { "limit": 100, "nextCursor": null, "hasMore": false }
-}
-```
-
-### Error contract
-400 on invalid limit/cursor; 500 on internal error.
-
-### DynamoDB access pattern
-Prefer a small curated/meta projection if the crawler schema defines one.  
-If no meta entity exists, implement as a **bounded** Query against known GSI partitions **or** document a required new access pattern/task dependency (do not unbounded Scan).  
-If true facet index is missing, task may return a static starter list from config for MVP and mark follow-up index work in Implementation notes.
-
-### Dependencies
-T003, T004
-
-### Acceptance criteria
-- Endpoints return deterministic, paginated lists.
-- No full table Scan in production path.
-- Response hides all DynamoDB keys.
-
-### Testing requirements
-- MockMvc 200 shape tests.
-- Limit validation.
-
-### Implementation notes
-- Product site shows fixed company list; aligning API with that list is acceptable for v1 if DynamoDB facet index is absent.
-- Prefer Query-based design when schema supports it.
-
----
-
-## T011 — Experience list and detail APIs
-
-Status: NOT_STARTED
-
-### Objective
-Expose interview experiences (posts) when present in the data model.
-
-### API responsibility
-Experience listing and detail for UI that shows “interview stories”.
-
-### Endpoints
-- `GET /api/v1/experiences`
-- `GET /api/v1/experiences/{id}`
-
-### Request contract
-**List**
-| Name | Type | Default | Validation |
-|------|------|---------|------------|
-| `company` | string | — | optional |
-| `limit` | int | 20 | 1–50 |
-| `cursor` | string | — | opaque |
-| `sort` | string | `newest` | `newest` \| `oldest` |
-
-**Detail:** path `id` required non-blank.
-
-### Response contract
-List: pagination envelope with Experience DTOs (see T004).  
-Detail:
-```json
-{
-  "data": {
-    "id": "exp-...",
-    "title": "Amazon SDE II Onsite",
+  "item": {
+    "id": "exp-1",
+    "title": "SDE II Interview Experience",
     "company": "Amazon",
     "role": "SDE II",
     "level": "L5",
-    "location": null,
-    "sourceUrl": "https://...",
-    "sourceName": "Example",
-    "postedAt": "2026-09-20T00:00:00Z",
-    "summary": null,
-    "questionIds": ["8a91c7..."]
+    "location": "Seattle, WA",
+    "sourcePlatform": "example",
+    "originalPostUrl": "https://example.com/post/1",
+    "postedAt": "2026-09-28T00:00:00Z",
+    "summary": "...",
+    "author": null,
+    "questionCount": 4
   }
 }
 ```
 
-### Error contract
-- 404 for unknown experience id
-- 400 validation/cursor
-- 500 internal
+**Error contract**
 
-### DynamoDB access pattern
-- Detail: GetItem on Experience PK/SK as defined in crawler schema (Experience entity).
-- List: Query time- or company-oriented GSI for experiences if present; otherwise implement only detail + document list as dependent on a new projection (separate note). **No Scan.**
+404 for missing experience; 400 for invalid id; 500 for unexpected failures.
 
-### Dependencies
-T002, T003, T004
+**DynamoDB access pattern**
 
-### Acceptance criteria
-- Detail returns public DTO only.
-- List uses cursor pagination when implemented.
-- Missing Experience entity support is explicitly handled (clear service error or empty list), not silent Scan.
+GetItem on `PK=EXPERIENCE#{experienceId}`, `SK=ENTITY`.
 
-### Testing requirements
-- MockMvc 200/404 for detail.
-- List pagination tests if list is implemented.
+**Dependencies**
 
-### Implementation notes
-- Schema lists Experience as a logical entity; map fields conservatively.
-- If Experience items are not written yet by crawler, APIs still compile and return empty/404 until data exists.
+T002, T005, T007.
+
+**Acceptance criteria**
+
+- [ ] Public Experience DTO is returned.
+- [ ] Missing resource is 404.
+- [ ] Internal keys/hashes are hidden.
+
+**Tests**
+
+- [ ] MockMvc 200/404.
+- [ ] Mapper/service tests.
+
+**Implementation notes**
+
+Do not eagerly load all questions unless a separate endpoint contract requires it.
 
 ---
 
-## T012 — GET /api/v1/experiences/{id}/questions — questions for an experience
+## T012 — Experience list access path and API
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Return questions belonging to one experience without N+1 client calls when relationship data exists.
+**Goal**
 
-### API responsibility
-Nested resource: Experience → Questions.
+Expose a paginated collection of interview experiences.
 
-### Endpoints
-`GET /api/v1/experiences/{id}/questions`
+**API responsibility**
 
-### Request contract
-| Name | Type | Default | Validation |
-|------|------|---------|------------|
-| `id` | path | | required |
-| `limit` | int | 20 | 1–50 |
-| `cursor` | string | | opaque |
+Allows the UI to browse interview stories/experiences.
 
-### Response contract
-```json
-{
-  "data": [ /* Question DTOs */ ],
-  "pagination": {
-    "limit": 20,
-    "nextCursor": null,
-    "hasMore": false
-  }
-}
-```
+**Endpoints**
 
-### Error contract
-- 404 if experience does not exist
-- 400 invalid cursor/limit
-- 500 internal
+`GET /api/v1/experiences`
 
-### DynamoDB access pattern
-1. Confirm experience exists (GetItem).
-2. Prefer Query on a relationship key (e.g. items under `PK = EXPERIENCE#{id}` with `SK` begins_with `QUESTION#`) **if schema stores adjacency**.
-3. Else: use `questionIds` on the experience item and **BatchGetItem** (bounded by page size) — avoid per-id GetItem loops in a loop without batching.
-4. No Scan.
+**Request contract**
 
-### Dependencies
-T006, T011
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | integer | 25 | 1–100 |
+| `cursor` | string | null | opaque |
+| `sort` | string | newest | documented sort |
+| `company` | string | null | optional |
 
-### Acceptance criteria
-- No unbounded N+1 GetItem.
-- Pagination consistent with T003.
-- 404 when experience missing.
+**Response contract**
 
-### Testing requirements
-- MockMvc with fixture experience + questions.
-- Verify BatchGet or Query used as designed.
+Common collection envelope with slim Experience DTOs.
 
-### Implementation notes
-- Cap batch size to page limit.
-- Order: prefer order stored on experience if available; otherwise stable by id.
+**Error contract**
+
+400 for invalid input/cursor/sort; 500 for unexpected failures.
+
+**DynamoDB access pattern**
+
+Use only a verified time/company Query projection. If one is missing, add the required projection/access-path task before implementing the controller. No Scan.
+
+**Dependencies**
+
+T003, T005, T007.
+
+**Acceptance criteria**
+
+- [ ] List is cursor paginated.
+- [ ] Ordering is deterministic.
+- [ ] No Scan is used.
+- [ ] List payload is bounded.
+
+**Tests**
+
+- [ ] MockMvc list test.
+- [ ] Repository Query test.
+- [ ] Cursor pagination test.
+
+**Implementation notes**
+
+The crawler documentation describes experience as a production entity but does not by itself guarantee a global list index. Verify before implementation.
+
+---
+
+## T013 — Company-filtered question API
+
+- [ ] Status
+
+**Goal**
+
+Support company filtering on the question collection.
+
+**API responsibility**
+
+Allows the UI to browse questions for a company.
+
+**Endpoints**
+
+`GET /api/v1/questions?company={company}`
+
+**Request contract**
+
+`company` is optional, trimmed, and bounded in length. Existing pagination/sort parameters remain supported.
+
+**Response contract**
+
+Common collection envelope; every returned item matches the company filter.
+
+**Error contract**
+
+400 for invalid company input, cursor, limit, or sort; 500 for unexpected failures.
+
+**DynamoDB access pattern**
+
+Use the documented company question projection/query path. Never perform a table Scan to satisfy the filter.
+
+**Dependencies**
+
+T008.
+
+**Acceptance criteria**
+
+- [ ] Company filter selects an efficient Query partition.
+- [ ] Unknown company returns an empty page.
+- [ ] Pagination works with the filter.
+- [ ] No Scan is introduced.
+
+**Tests**
+
+- [ ] MockMvc company-filter test.
+- [ ] Repository partition-key test.
+- [ ] Pagination with company filter.
+
+**Implementation notes**
+
+Follow the crawler's stored company normalization exactly; do not add fuzzy matching.
+
+---
+
+## T014 — Question-type filter API
+
+- [ ] Status
+
+**Goal**
+
+Support question-type filtering on the question collection.
+
+**API responsibility**
+
+Allows the UI to browse questions by category such as Coding or System Design.
+
+**Endpoints**
+
+`GET /api/v1/questions?type={type}`
+
+**Request contract**
+
+`type` is optional, trimmed, bounded, and must match a supported stored taxonomy when an explicit taxonomy is enforced.
+
+**Response contract**
+
+Common collection envelope; returned items match the type.
+
+**Error contract**
+
+400 for invalid type/cursor/limit/sort or unsupported expensive combinations; 500 for unexpected failures.
+
+**DynamoDB access pattern**
+
+Use the documented question-type Query/projection path. Do not Scan.
+
+**Dependencies**
+
+T008.
+
+**Acceptance criteria**
+
+- [ ] Type-only filter uses Query.
+- [ ] Empty match returns an empty collection.
+- [ ] Pagination remains opaque and correct.
+- [ ] Expensive combinations are explicit instead of silently scanning.
+
+**Tests**
+
+- [ ] MockMvc type-filter test.
+- [ ] Repository key-condition test.
+- [ ] Combination behavior test.
+
+**Implementation notes**
+
+Use canonical question-type values from crawler documentation.
+
+---
+
+## Definition of Done
+
+For this part, all applicable tasks are complete only when their acceptance criteria and tests pass, their status is checked, and the implementation follows the locked architecture from Part 1.
