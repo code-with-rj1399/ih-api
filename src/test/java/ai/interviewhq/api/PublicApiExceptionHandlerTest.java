@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PublicApiErrorProbeController.class)
-@Import(ai.interviewhq.api.common.PublicApiExceptionHandler.class)
+@Import(ai.interviewhq.api.common.exception.PublicApiExceptionHandler.class)
 class PublicApiExceptionHandlerTest {
 
     @Autowired
