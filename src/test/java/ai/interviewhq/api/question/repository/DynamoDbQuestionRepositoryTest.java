@@ -45,7 +45,6 @@ class DynamoDbQuestionRepositoryTest {
                                 Map.of(
                                         "pk", AttributeValue.builder().s("QINDEX#EXTRACTED").build(),
                                         "sk", AttributeValue.builder().s("2026-09-30T10:00:00Z#7").build(),
-                                        "entityType", AttributeValue.builder().s("InterviewQuestion").build(),
                                         "data", AttributeValue.builder().m(Map.of(
                                                 "id", AttributeValue.builder().n("7").build(),
                                                 "questionText", AttributeValue.builder().s("Q").build())).build())))
