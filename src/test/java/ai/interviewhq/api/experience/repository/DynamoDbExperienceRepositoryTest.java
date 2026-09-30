@@ -85,7 +85,7 @@ class DynamoDbExperienceRepositoryTest {
         var batchCaptor = org.mockito.ArgumentCaptor.forClass(BatchGetItemRequest.class);
         verify(client).batchGetItem(batchCaptor.capture());
         assertEquals("EXPERIENCE#4",
-                batchCaptor.getValue().requestItems().get("table").keys().getFirst().get("pk").s());
+                batchCaptor.getValue().requestItems().get("table").keys().get(0).get("pk").s());
         verify(client, never()).scan(any());
     }
 
