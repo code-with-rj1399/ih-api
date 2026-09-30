@@ -14,7 +14,9 @@ Continue from Parts 1–2. These tasks remain API-only and are intended to be im
 
 ## T015 — Experience company filter API
 
-- [!] Status**Goal**
+- [!] Status
+
+**Goal**
 
 Support company filtering on the experience collection when DynamoDB provides an efficient access path.
 
@@ -67,7 +69,9 @@ The current source schema does not provide a global company experience-list proj
 
 ## T016 — Public metadata/facet APIs
 
-- [!] Status**Goal**
+- [!] Status
+
+**Goal**
 
 Expose bounded company and question-type metadata needed by UI filters.
 
@@ -134,7 +138,9 @@ The current schema provides question-type taxonomy but no metadata partition tha
 
 ## T017 — Public sorting contract
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Standardize supported sorting for question and experience collections.
 
@@ -186,7 +192,9 @@ Do not expose arbitrary sort fields unless the schema can support them efficient
 
 ## T018 — Combined filters and DynamoDB access-pattern rules
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Define and implement efficient behavior for filter combinations such as company + type.
 
@@ -238,7 +246,9 @@ DynamoDB limitations are part of the public API contract.
 
 ## T019 — Request bounds and validation hardening
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Apply consistent bounds to anonymous public read requests.
 
@@ -296,7 +306,9 @@ Do not add a full authentication system in this task.
 
 ## T020 — Public API observability
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Add lightweight request and DynamoDB failure observability for `/api/v1`.
 
@@ -347,7 +359,9 @@ Use existing SLF4J/Actuator conventions. Do not add new observability infrastruc
 
 ## T021 — CORS and browser access configuration
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Configure safe browser access for the future InterviewHQ UI.
 
