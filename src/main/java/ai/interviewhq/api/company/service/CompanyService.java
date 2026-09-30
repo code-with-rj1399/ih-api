@@ -13,7 +13,7 @@ import ai.interviewhq.api.infrastructure.dynamodb.DynamoDbPage;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
@@ -22,10 +22,7 @@ public class CompanyService {
     private final ExperienceRepository experiences;
     private final OpaqueCursorCodec cursors;
 
-    public CompanyService(
-            CompanyRepository companies,
-            ExperienceRepository experiences,
-            OpaqueCursorCodec cursors) {
+    public CompanyService(CompanyRepository companies, ExperienceRepository experiences, OpaqueCursorCodec cursors) {
         this.companies = companies;
         this.experiences = experiences;
         this.cursors = cursors;
@@ -33,15 +30,11 @@ public class CompanyService {
 
     public ApiCollectionResponse<CompanyResponse> list(Integer limit, String cursor) {
         PaginationRequest page = PaginationRequest.of(limit, cursor);
-        DynamoDbPage<Map<String, Object>> result =
-                companies.list(page.limit(), cursors.decode(page.cursor()));
-
+        DynamoDbPage<Map<String, Object>> result = companies.list(page.limit(), cursors.decode(page.cursor()));
         return new ApiCollectionResponse<>(
                 result.items().stream().map(this::toResponse).toList(),
                 new ApiCollectionResponse.Pagination(
-                        page.limit(),
-                        cursors.encode(result.lastEvaluatedKey()),
-                        result.hasMore()));
+                        page.limit(), cursors.encode(result.lastEvaluatedKey()), result.hasMore()));
     }
 
     public CompanyResponse find(String companyName) {
@@ -57,8 +50,7 @@ public class CompanyService {
         if (current == null) throw notFound("Company not found");
         if (normalize(updated) == null) throw badRequest("Company name is required");
 
-        Map<String, Object> existing = companies.find(currentCompanyName)
-                .orElseThrow(() -> notFound("Company not found"));
+        companies.find(currentCompanyName).orElseThrow(() -> notFound("Company not found"));
 
         if (!current.equals(normalize(updated)) && companies.find(updated).isPresent()) {
             throw new PublicApiException(
@@ -67,18 +59,15 @@ public class CompanyService {
                     HttpStatus.CONFLICT);
         }
 
-        existing = new java.util.LinkedHashMap<>(existing);
-        existing.put("companyName", updated);
-        existing.put("website", request.website());
-        existing.put("logoUrl", request.logoUrl());
-        existing.put("description", request.description());
-        existing.put("updatedAt", Instant.now().toString());
+        Map<String, Object> replacement = new LinkedHashMap<>();
+        replacement.put("name", updated);
+        replacement.put("slug", normalize(updated));
 
         if (!current.equals(normalize(updated))) {
             companies.delete(currentCompanyName);
         }
-        companies.save(existing);
-        return toResponse(existing);
+        companies.save(replacement);
+        return toResponse(replacement);
     }
 
     public MergeCompanyResponse merge(String sourceCompany, String targetCompany) {
@@ -103,23 +92,14 @@ public class CompanyService {
     }
 
     private CompanyResponse toResponse(Map<String, Object> data) {
-        return new CompanyResponse(
-                asString(data, "companyName"),
-                asString(data, "website"),
-                asString(data, "logoUrl"),
-                asString(data, "description"),
-                asInstant(data, "createdAt"),
-                asInstant(data, "updatedAt"));
+        String name = asString(data, "name");
+        if (name == null) name = asString(data, "companyName");
+        return new CompanyResponse(name);
     }
 
     private static String asString(Map<String, Object> data, String key) {
         Object value = data.get(key);
         return value == null ? null : String.valueOf(value);
-    }
-
-    private static Instant asInstant(Map<String, Object> data, String key) {
-        String value = asString(data, key);
-        return value == null ? null : Instant.parse(value);
     }
 
     private static String requireName(String value, String message) {
