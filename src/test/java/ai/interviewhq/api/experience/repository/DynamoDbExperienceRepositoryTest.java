@@ -42,6 +42,42 @@ class DynamoDbExperienceRepositoryTest {
         assertEquals("ENTITY", captor.getValue().key().get("sk").s());
     }
 
+
+    @Test
+    void globalListUsesExperienceProjectionQueryAndCursor() {
+        DynamoDbClient client = mock(DynamoDbClient.class);
+        when(client.query(any(QueryRequest.class))).thenReturn(
+                software.amazon.awssdk.services.dynamodb.model.QueryResponse.builder()
+                        .items(List.of(Map.of(
+                                "pk", AttributeValue.builder().s("EINDEX#POSTED").build(),
+                                "sk", AttributeValue.builder().s("2026-09-30T10:00:00Z#4").build(),
+                                "entityType", AttributeValue.builder().s("ExperienceListIndex").build(),
+                                "data", AttributeValue.builder().m(Map.of(
+                                        "id", AttributeValue.builder().n("4").build(),
+                                        "company", AttributeValue.builder().s("Acme").build())).build())))
+                        .lastEvaluatedKey(Map.of(
+                                "pk", AttributeValue.builder().s("EINDEX#POSTED").build(),
+                                "sk", AttributeValue.builder().s("2026-09-30T10:00:00Z#4").build()))
+                        .build());
+
+        var result = new DynamoDbExperienceRepository(client, "table")
+                .list("EINDEX#POSTED", false, 25,
+                        Map.of("pk", "EINDEX#POSTED", "sk", "2026-09-30T11:00:00Z#5"));
+
+        assertEquals(1, result.items().size());
+        assertEquals("4", result.items().get(0).get("id"));
+        assertEquals("EINDEX#POSTED", result.lastEvaluatedKey().get("pk"));
+
+        var captor = org.mockito.ArgumentCaptor.forClass(QueryRequest.class);
+        verify(client).query(captor.capture());
+        assertEquals("EINDEX#POSTED", captor.getValue().expressionAttributeValues().get(":pk").s());
+        assertEquals("ExperienceListIndex",
+                captor.getValue().expressionAttributeValues().get(":entityType").s());
+        assertFalse(captor.getValue().scanIndexForward());
+        assertEquals("EINDEX#POSTED", captor.getValue().exclusiveStartKey().get("pk").s());
+        verify(client, never()).scan(any(software.amazon.awssdk.services.dynamodb.model.ScanRequest.class));
+    }
+
     @Test
     void listByCrawlRunUsesQueryAndBatchGetWithCursor() {
         DynamoDbClient client = mock(DynamoDbClient.class);
