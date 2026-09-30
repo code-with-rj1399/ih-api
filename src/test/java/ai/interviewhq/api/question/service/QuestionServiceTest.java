@@ -25,7 +25,7 @@ class QuestionServiceTest {
 
         service.list(null, null, null, null, null);
 
-        verify(repo).list(eq("QINDEX#EXTRACTED"), eq(true), eq(25), isNull(), isNull(), eq(Map.of()));
+        verify(repo).list(eq("QINDEX#EXTRACTED"), eq(false), eq(25), isNull(), isNull(), eq(Map.of()));
     }
 
     @Test
@@ -40,7 +40,7 @@ class QuestionServiceTest {
         service.list(null, null, "Acme", null, "newest");
 
         ArgumentCaptor<String> pk = ArgumentCaptor.forClass(String.class);
-        verify(repo).list(pk.capture(), eq(true), eq(25), isNull(), isNull(), eq(Map.of()));
+        verify(repo).list(pk.capture(), eq(false), eq(25), isNull(), isNull(), eq(Map.of()));
         assertEquals("QINDEX#COMPANY#acme", pk.getValue());
     }
 
@@ -55,7 +55,7 @@ class QuestionServiceTest {
 
         service.list(null, null, null, "System Design", "oldest");
 
-        verify(repo).list(eq("QINDEX#TYPE#System Design"), eq(false), eq(25), isNull(), isNull(), eq(Map.of()));
+        verify(repo).list(eq("QINDEX#TYPE#System Design"), eq(true), eq(25), isNull(), isNull(), eq(Map.of()));
     }
 
     @Test
@@ -70,7 +70,7 @@ class QuestionServiceTest {
         service.list(null, null, "Acme", "Coding", "newest");
 
         ArgumentCaptor<String> filter = ArgumentCaptor.forClass(String.class);
-        verify(repo).list(eq("QINDEX#COMPANY#acme"), eq(true), eq(25), isNull(), filter.capture(), anyMap());
+        verify(repo).list(eq("QINDEX#COMPANY#acme"), eq(false), eq(25), isNull(), filter.capture(), anyMap());
         assertEquals("contains(data.questionTypes, :type)", filter.getValue());
     }
 }
