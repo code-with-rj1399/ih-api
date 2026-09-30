@@ -164,8 +164,8 @@ Error response:
 
 - Total: 24
 - Verified: 0
-- Implemented, CI pending: 20
-- Blocked: 3
+- Implemented, CI pending: 23
+- Blocked: 0
 - Not started: 1
 
 Planning commit: task documentation only.
