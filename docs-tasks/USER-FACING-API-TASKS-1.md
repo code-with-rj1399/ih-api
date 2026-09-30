@@ -11,6 +11,17 @@ Branch: `ih-apis-user-facing`
 
 Start by reading these task files and inspecting the repository. Pick the first unfinished (`- [ ]`) task whose dependencies are satisfied, implement only that task, run its tests, mark it complete, commit it, and push to `ih-apis-user-facing`. After pushing, immediately continue with the next unfinished dependency-satisfied task. Never combine multiple tasks into one commit.
 
+## Status legend
+
+- `[x]` Verified complete.
+- `[~]` Implemented; CI verification is pending.
+- `[!]` Blocked by a missing upstream/data access path.
+- `[ ]` Not started.
+
+## Package structure convention
+
+Business features use feature-oriented packages (`question`, `experience`, `metadata`, `system`). Shared contracts live under `common`; DynamoDB implementation details live under `infrastructure/dynamodb`. Keep the dependency direction `controller → service → repository interface → infrastructure implementation`. Tests should mirror the production package structure. Public DTOs must never depend on DynamoDB types.
+
 ## How to use these files
 
 Each session must:
@@ -152,8 +163,10 @@ Error response:
 ## Progress
 
 - Total: 24
-- Completed: 3
-- Remaining: 21
+- Verified: 0
+- Implemented, CI pending: 20
+- Blocked: 3
+- Not started: 1
 
 Planning commit: task documentation only.
 
@@ -161,9 +174,7 @@ Planning commit: task documentation only.
 
 ## T001 — Public API conventions and package foundation
 
-- [x] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Establish package layout and base conventions for the public API namespace.
 
@@ -198,9 +209,7 @@ Use repository conventions under `ai.interviewhq.api`. Do not introduce unrelate
 
 ## T002 — Common DTO envelope and error handling
 
-- [x] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Introduce shared public response/error models and exception handling.
 
@@ -235,9 +244,7 @@ Keep the contract small and stable; do not expose stack traces.
 
 ## T003 — Opaque cursor pagination
 
-- [x] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Implement one cursor codec and pagination model for collection APIs.
 
