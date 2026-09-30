@@ -35,7 +35,7 @@ public class MetadataService {
             String partitionKey,
             Integer limit,
             String cursor) {
-        PaginationRequest pageRequest = PaginationRequest.of(limit, cursor);
+        PaginationRequest pageRequest = new PaginationRequest(limit == null ? 100 : limit, cursor);
         DynamoDbPage<Map<String, Object>> page = repo.list(
                 partitionKey,
                 pageRequest.limit(),
