@@ -103,4 +103,18 @@ class QuestionControllerTest {
             throw new AssertionError(e);
         }
     }
+    @Test
+    void rejectsUnsupportedSort() {
+        when(service.list(null, null, null, null, "random"))
+                .thenThrow(new ai.interviewhq.api.common.exception.PublicApiException(
+                        "INVALID_SORT", "Unsupported sort value", org.springframework.http.HttpStatus.BAD_REQUEST));
+        try {
+            mvc.perform(get("/api/v1/questions").param("sort", "random"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("INVALID_SORT"));
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
 }
+
