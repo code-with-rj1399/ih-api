@@ -29,7 +29,7 @@ public class QuestionService {
  }
  private ApiCollectionResponse<QuestionSummaryResponse> collection(DynamoDbPage<QuestionListProjection> page,int limit){return new ApiCollectionResponse<>(page.items().stream().map(mapper::toSummary).toList(),new ApiCollectionResponse.Pagination(limit,cursors.encode(page.lastEvaluatedKey()),page.hasMore()));}
  private static String blank(String s){if(s==null||s.isBlank())return null;return s.trim();}
- private static String normalize(String s){String v=blank(s);return v==null?null:v.toLowerCase(Locale.ROOT).replaceAll("\s+"," ");}
+ private static String normalize(String s){String v=blank(s);return v==null?null:v.toLowerCase(Locale.ROOT).replaceAll("\\s+"," ");}
  private static void validateSort(String sort){if(sort!=null&&!sort.isBlank()&&!sort.equals("newest")&&!sort.equals("oldest"))throw new PublicApiException("INVALID_SORT","Unsupported sort value",HttpStatus.BAD_REQUEST);}
  private static <T>T throwNotFound(){throw new PublicApiException("NOT_FOUND","Interview question not found",HttpStatus.NOT_FOUND);}
 }
