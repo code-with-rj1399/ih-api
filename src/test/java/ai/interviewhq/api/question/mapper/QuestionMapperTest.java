@@ -13,21 +13,21 @@ class QuestionMapperTest {
 
     @Test
     void mapsAllSupportedQuestionFields() {
-        Map<String, Object> persisted = Map.of(
-                "id", "12",
-                "experienceId", "4",
-                "problemUrl", "https://leetcode.com/problems/two-sum/",
-                "questionTypes", List.of("Coding", "DSA"),
-                "difficulty", "Medium",
-                "questionText", "Design a cache",
-                "questionDescription", "Support TTL and LRU eviction.",
-                "candidateApproach", "Use a hash map plus doubly linked list.",
-                "confidence", "0.92",
-                "questionParticularity", "SPECIFIC",
-                "extractedAt", "2026-09-30T08:00:00Z",
-                "createdAt", "2026-09-30T08:05:00Z",
-                "modelName", "internal-model",
-                "dedupeHash", "internal-hash");
+        Map<String, Object> persisted = Map.ofEntries(
+                Map.entry("id", "12"),
+                Map.entry("experienceId", "4"),
+                Map.entry("problemUrl", "https://leetcode.com/problems/two-sum/"),
+                Map.entry("questionTypes", List.of("Coding", "DSA")),
+                Map.entry("difficulty", "Medium"),
+                Map.entry("questionText", "Design a cache"),
+                Map.entry("questionDescription", "Support TTL and LRU eviction."),
+                Map.entry("candidateApproach", "Use a hash map plus doubly linked list."),
+                Map.entry("confidence", "0.92"),
+                Map.entry("questionParticularity", "SPECIFIC"),
+                Map.entry("extractedAt", "2026-09-30T08:00:00Z"),
+                Map.entry("createdAt", "2026-09-30T08:05:00Z"),
+                Map.entry("modelName", "internal-model"),
+                Map.entry("dedupeHash", "internal-hash"));
 
         QuestionResponse result = new QuestionMapper().toResponse(persisted);
 
