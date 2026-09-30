@@ -30,7 +30,7 @@ public class DynamoDbQuestionRepository implements QuestionRepository {
     public DynamoDbQuestionRepository(
             DynamoDbClient client,
             ObjectMapper mapper,
-            @Value("${aws.dynamodb.table}") String table) {
+            @Value("${aws.dynamodb.question-table}") String table) {
         this.client = client;
         this.mapper = mapper;
         this.table = table;

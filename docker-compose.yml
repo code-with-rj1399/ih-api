@@ -13,7 +13,9 @@ services:
       AWS_ACCESS_KEY_ID: dummy
       AWS_SECRET_ACCESS_KEY: dummy
       DYNAMODB_ENDPOINT: http://host.docker.internal:8000
-      DYNAMODB_TABLE: interviewhq-dev
+      DYNAMODB_TABLE: interviewhq-crawler-dev
+      DYNAMODB_EXPERIENCE_TABLE: interviewhq-experiences-dev
+      DYNAMODB_QUESTION_TABLE: interviewhq-questions-dev
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

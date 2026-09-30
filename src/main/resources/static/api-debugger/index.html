@@ -3,82 +3,59 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>InterviewHQ</title>
+  <title>InterviewHQ API Explorer</title>
   <link rel="stylesheet" href="/api-debugger/api-debugger.css">
 </head>
 <body>
 <header class="site-header">
   <div class="header-inner">
-    <div class="brand">
-      <div class="brand-mark">HQ</div>
-      <div>
-        <div class="brand-name">InterviewHQ</div>
-        <div class="brand-subtitle">Interview experiences & questions</div>
-      </div>
-    </div>
-    <div class="api-config">
-      <label for="baseUrl">API</label>
-      <div class="api-row">
-        <input id="baseUrl" placeholder="http://localhost:8091">
-        <button id="saveBase" class="secondary">Use</button>
-      </div>
-    </div>
+    <div class="brand"><div class="brand-mark">HQ</div><div><div class="brand-name">InterviewHQ</div><div class="brand-subtitle">API Explorer & verification console</div></div></div>
+    <div class="api-config"><label for="baseUrl">API base URL</label><div class="api-row"><input id="baseUrl" placeholder="http://localhost:8091"><button id="saveBase" class="secondary">Use</button></div></div>
   </div>
 </header>
-
-<nav class="main-nav">
-  <div class="nav-inner">
-    <button class="tab active" data-tab="experiences">Experiences</button>
-    <button class="tab" data-tab="questions">Questions</button>
-  </div>
-</nav>
-
+<nav class="main-nav"><div class="nav-inner">
+  <button class="tab active" data-tab="experiences">Experiences</button>
+  <button class="tab" data-tab="questions">Questions</button>
+  <button class="tab" data-tab="metadata">Metadata</button>
+</div></nav>
 <main>
-  <section id="experiences" class="panel active">
-    <div class="page-heading">
-      <div>
-        <div class="eyebrow">Interview experiences</div>
-        <h1>What candidates experienced</h1>
-        <p>Browse recent interview experiences and open one to see the questions asked.</p>
-      </div>
-      <button class="primary" data-action="load-experiences">Refresh</button>
-    </div>
+  <div class="status-bar"><span id="connectionStatus" class="status-dot unknown"></span><span id="connectionText">No API request yet</span><span id="lastRequest" class="muted"></span></div>
 
+  <section id="experiences" class="panel active">
+    <div class="page-heading"><div><div class="eyebrow">GET /api/v1/experiences</div><h1>Interview experiences</h1><p>Explore the real API response, then drill into an experience and its questions.</p></div><button class="primary" data-action="load-experiences">Run request</button></div>
     <div class="filters">
       <label>Company<input id="expCompany" placeholder="e.g. Amazon"></label>
       <label>Sort<select id="expSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
-      <label>Show<input id="expLimit" type="number" min="1" max="100" value="25"></label>
+      <label>Limit<input id="expLimit" type="number" min="1" max="100" value="25"></label>
+      <button class="secondary" data-action="reset-experiences">Reset</button>
     </div>
-
-    <div id="experienceList" class="experience-list"></div>
-    <div id="experiencePagination" class="pagination"></div>
-
-    <article id="experienceDetail" class="experience-detail hidden"></article>
+    <div class="request-strip"><code id="experienceUrl">GET /api/v1/experiences</code><span id="experienceTiming"></span></div>
+    <div class="explorer-grid"><div><div id="experienceList" class="experience-list"></div><div id="experiencePagination" class="pagination"></div></div><div class="response-panel"><div class="response-head"><b>Actual API response</b><button class="secondary small" data-copy="experienceResponse">Copy JSON</button></div><pre id="experienceResponse">{}</pre></div></div>
+    <article id="experienceDetail" class="detail hidden"></article>
   </section>
 
   <section id="questions" class="panel">
-    <div class="page-heading">
-      <div>
-        <div class="eyebrow">Interview questions</div>
-        <h1>Questions candidates were asked</h1>
-        <p>Search the questions already available through the hq-API.</p>
-      </div>
-      <button class="primary" data-action="load-questions">Refresh</button>
-    </div>
-
+    <div class="page-heading"><div><div class="eyebrow">GET /api/v1/questions</div><h1>Interview questions</h1><p>Filter, sort, paginate, and open individual questions from the API.</p></div><button class="primary" data-action="load-questions">Run request</button></div>
     <div class="filters">
       <label>Company<input id="qCompany" placeholder="e.g. Google"></label>
       <label>Question type<input id="qType" placeholder="e.g. DSA"></label>
       <label>Sort<select id="qSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
-      <label>Show<input id="qLimit" type="number" min="1" max="100" value="25"></label>
+      <label>Limit<input id="qLimit" type="number" min="1" max="100" value="25"></label>
+      <button class="secondary" data-action="reset-questions">Reset</button>
     </div>
+    <div class="request-strip"><code id="questionUrl">GET /api/v1/questions</code><span id="questionTiming"></span></div>
+    <div class="explorer-grid"><div><div id="questionList" class="question-list"></div><div id="questionPagination" class="pagination"></div></div><div class="response-panel"><div class="response-head"><b>Actual API response</b><button class="secondary small" data-copy="questionResponse">Copy JSON</button></div><pre id="questionResponse">{}</pre></div></div>
+    <article id="questionDetail" class="detail hidden"></article>
+  </section>
 
-    <div id="questionList" class="question-list"></div>
-    <div id="questionPagination" class="pagination"></div>
-    <article id="questionDetail" class="question-detail hidden"></article>
+  <section id="metadata" class="panel">
+    <div class="page-heading"><div><div class="eyebrow">GET /api/v1/meta</div><h1>API metadata</h1><p>Verify company and question-type metadata persisted by the crawler.</p></div></div>
+    <div class="meta-grid">
+      <article class="meta-card"><div class="meta-head"><div><b>Companies</b><code>/api/v1/meta/companies</code></div><button class="primary" data-action="load-companies">Run</button></div><div id="companiesList" class="meta-list"></div><div id="companiesPagination" class="pagination"></div><pre id="companiesResponse">{}</pre></article>
+      <article class="meta-card"><div class="meta-head"><div><b>Question types</b><code>/api/v1/meta/question-types</code></div><button class="primary" data-action="load-types">Run</button></div><div id="typesList" class="meta-list"></div><div id="typesPagination" class="pagination"></div><pre id="typesResponse">{}</pre></article>
+    </div>
   </section>
 </main>
-
 <div id="toast" class="toast" role="status"></div>
 <script src="/api-debugger/api-debugger.js"></script>
 </body>
