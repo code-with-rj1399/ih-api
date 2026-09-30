@@ -342,9 +342,9 @@ T008, T009, T010, T011, T012.
 
 **Acceptance criteria**
 
-- [ ] Method/path/status/duration are observable.
-- [ ] DynamoDB failures include useful operation context.
-- [ ] Question/experience bodies are not dumped to logs.
+- [x] Method/path/status/duration are observable.
+- [x] DynamoDB failures include useful operation context.
+- [x] Question/experience bodies are not dumped to logs.
 
 **Tests**
 
