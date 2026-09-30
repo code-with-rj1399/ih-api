@@ -326,7 +326,7 @@ Use the crawler schema as the field source. Do not invent topic fields absent fr
 
 ## T005 — Public Experience DTO and mapper
 
-- [~] Status
+- [~] Status (merged in PR #7; CI verification pending)
 
 **Goal**
 
@@ -346,14 +346,14 @@ T001, T002.
 
 **Acceptance criteria**
 
-- [ ] DTO maps documented experience fields.
-- [ ] Internal storage fields are hidden.
-- [ ] Optional fields are null-safe.
+- [x] DTO maps documented experience fields.
+- [x] Internal storage fields are hidden.
+- [x] Optional fields are null-safe.
 
 **Tests**
 
-- [ ] Mapper tests.
-- [ ] Missing optional-field tests.
+- [x] Mapper tests.
+- [x] Missing optional-field tests.
 
 **Implementation notes**
 
