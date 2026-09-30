@@ -152,8 +152,8 @@ Error response:
 ## Progress
 
 - Total: 24
-- Completed: 2
-- Remaining: 22
+- Completed: 3
+- Remaining: 21
 
 Planning commit: task documentation only.
 
@@ -235,7 +235,7 @@ Keep the contract small and stable; do not expose stack traces.
 
 ## T003 — Opaque cursor pagination
 
-- [ ] Status
+- [x] Status
 
 **Goal**
 
@@ -255,17 +255,17 @@ T002.
 
 **Acceptance criteria**
 
-- [ ] Cursor round-trips required DynamoDB key data.
-- [ ] Malformed cursor returns a documented 400.
-- [ ] Default limit is 25.
-- [ ] Maximum limit is 100.
-- [ ] Raw DynamoDB `LastEvaluatedKey` is never returned.
+- [x] Cursor round-trips required DynamoDB key data.
+- [x] Malformed cursor returns a documented 400.
+- [x] Default limit is 25.
+- [x] Maximum limit is 100.
+- [x] Raw DynamoDB `LastEvaluatedKey` is never returned.
 
 **Tests**
 
-- [ ] Cursor encode/decode round-trip.
-- [ ] Invalid cursor tests.
-- [ ] Page-size boundary tests.
+- [x] Cursor encode/decode round-trip.
+- [x] Invalid cursor tests.
+- [x] Page-size boundary tests.
 
 **Implementation notes**
 
