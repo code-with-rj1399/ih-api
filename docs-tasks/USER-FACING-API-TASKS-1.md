@@ -288,7 +288,7 @@ Prefer URL-safe opaque Base64 JSON. Cursor contents are implementation details.
 
 ## T004 — Public Question DTO and mapper
 
-- [~] Status
+- [~] Status (merged in PR #6; CI verification pending)
 
 **Goal**
 
@@ -308,15 +308,15 @@ T001, T002.
 
 **Acceptance criteria**
 
-- [ ] DTO contains only supported public fields.
-- [ ] DynamoDB keys/storage fields are hidden.
-- [ ] Optional fields are null-safe.
-- [ ] `questionTypes` is represented consistently.
+- [x] DTO contains only supported public fields.
+- [x] DynamoDB keys/storage fields are hidden.
+- [x] Optional fields are null-safe.
+- [x] `questionTypes` is represented consistently.
 
 **Tests**
 
-- [ ] Mapper tests with representative persisted items.
-- [ ] Optional-field tests.
+- [x] Mapper tests with representative persisted items.
+- [x] Optional-field tests.
 
 **Implementation notes**
 
