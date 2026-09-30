@@ -4,6 +4,6 @@ import static org.mockito.Mockito.*; import static org.springframework.test.web.
 @WebMvcTest(ExperienceController.class) @Import(PublicApiExceptionHandler.class)
 class ExperienceControllerTest {
  @Autowired MockMvc mvc; @MockBean ExperienceService experiences; @MockBean QuestionService questions;
- @Test void getsExperience(){when(experiences.find(7)).thenReturn(new ExperienceResponse(7,null,null,"glassdoor","Interview",null,null,null,null,"Acme","SWE",null,"Seattle",null,3,null));try{mvc.perform(get("/api/v1/experiences/7")).andExpect(status().isOk()).andExpect(jsonPath("$.item.id").value(7)).andExpect(jsonPath("$.item.company").value("Acme"));}catch(Exception e){throw new AssertionError(e);}}
+ @Test void getsExperience(){when(experiences.find(7)).thenReturn(new ExperienceResponse(7,"glassdoor","Interview",null,null,null,null,"Acme","SWE",null,"Seattle",null,3,null));try{mvc.perform(get("/api/v1/experiences/7")).andExpect(status().isOk()).andExpect(jsonPath("$.item.id").value(7)).andExpect(jsonPath("$.item.company").value("Acme"));}catch(Exception e){throw new AssertionError(e);}}
  @Test void rejectsInvalidId(){try{mvc.perform(get("/api/v1/experiences/0")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));verifyNoInteractions(experiences);}catch(Exception e){throw new AssertionError(e);}}
 }
