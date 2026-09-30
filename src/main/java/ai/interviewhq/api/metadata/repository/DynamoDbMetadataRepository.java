@@ -24,7 +24,7 @@ public class DynamoDbMetadataRepository implements MetadataRepository {
 
     public DynamoDbMetadataRepository(
             DynamoDbClient client,
-            @Value("${aws.dynamodb.table}") String table) {
+            @Value("${aws.dynamodb.experience-table}") String table) {
         this.client = client;
         this.table = table;
     }
