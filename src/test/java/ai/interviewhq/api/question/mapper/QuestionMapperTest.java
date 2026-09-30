@@ -1,6 +1,89 @@
 package ai.interviewhq.api.question.mapper;
-import ai.interviewhq.api.question.dto.QuestionResponse; import org.junit.jupiter.api.Test; import java.util.Map; import static org.junit.jupiter.api.Assertions.*;
+
+import ai.interviewhq.api.question.dto.QuestionResponse;
+import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class QuestionMapperTest {
- @Test void hidesUnsupportedPersistenceFields(){var d=Map.<String,Object>of("id","12","experienceId","4","questionText","Design a cache","questionTypes",java.util.List.of("System Design"),"confidence","0.92","modelName","internal","dedupeHash","secret","extractedAt","2026-09-30T08:00:00Z","createdAt","2026-09-30T08:00:00Z");QuestionResponse r=new QuestionMapper().toResponse(d);assertEquals(12,r.id());assertEquals("Design a cache",r.questionText());assertEquals(0.92f,r.confidence());}
- @Test void optionalFieldsRemainNull(){QuestionResponse r=new QuestionMapper().toResponse(Map.of("id","1","questionText","Q"));assertNull(r.problemUrl());assertNull(r.candidateApproach());assertNull(r.extractedAt());}
+
+    @Test
+    void mapsAllSupportedQuestionFields() {
+        Map<String, Object> persisted = Map.of(
+                "id", "12",
+                "experienceId", "4",
+                "problemUrl", "https://leetcode.com/problems/two-sum/",
+                "questionTypes", List.of("Coding", "DSA"),
+                "difficulty", "Medium",
+                "questionText", "Design a cache",
+                "questionDescription", "Support TTL and LRU eviction.",
+                "candidateApproach", "Use a hash map plus doubly linked list.",
+                "confidence", "0.92",
+                "questionParticularity", "SPECIFIC",
+                "extractedAt", "2026-09-30T08:00:00Z",
+                "createdAt", "2026-09-30T08:05:00Z",
+                "modelName", "internal-model",
+                "dedupeHash", "internal-hash");
+
+        QuestionResponse result = new QuestionMapper().toResponse(persisted);
+
+        assertEquals(12, result.id());
+        assertEquals(4, result.experienceId());
+        assertEquals("https://leetcode.com/problems/two-sum/", result.problemUrl());
+        assertEquals(List.of("Coding", "DSA"), result.questionTypes());
+        assertEquals("Medium", result.difficulty());
+        assertEquals("Design a cache", result.questionText());
+        assertEquals("Support TTL and LRU eviction.", result.questionDescription());
+        assertEquals("Use a hash map plus doubly linked list.", result.candidateApproach());
+        assertEquals(0.92f, result.confidence());
+        assertEquals("SPECIFIC", result.questionParticularity());
+        assertEquals(Instant.parse("2026-09-30T08:00:00Z"), result.extractedAt());
+        assertEquals(Instant.parse("2026-09-30T08:05:00Z"), result.createdAt());
+    }
+
+    @Test
+    void doesNotExposeInternalPersistenceFields() {
+        Map<String, Object> persisted = Map.of(
+                "id", "12",
+                "experienceId", "4",
+                "questionText", "Design a cache",
+                "modelName", "internal-model",
+                "dedupeHash", "internal-hash");
+
+        QuestionResponse result = new QuestionMapper().toResponse(persisted);
+
+        assertEquals(12, result.id());
+        assertEquals(4, result.experienceId());
+        assertEquals("Design a cache", result.questionText());
+        assertFalse(result.toString().contains("internal-model"));
+        assertFalse(result.toString().contains("internal-hash"));
+    }
+
+    @Test
+    void optionalFieldsRemainNull() {
+        QuestionResponse result = new QuestionMapper().toResponse(
+                Map.of("id", "1", "questionText", "Q"));
+
+        assertNull(result.problemUrl());
+        assertEquals(List.of(), result.questionTypes());
+        assertNull(result.difficulty());
+        assertNull(result.questionDescription());
+        assertNull(result.candidateApproach());
+        assertNull(result.confidence());
+        assertNull(result.questionParticularity());
+        assertNull(result.extractedAt());
+        assertNull(result.createdAt());
+    }
+
+    @Test
+    void nonListQuestionTypesAreNormalizedToEmptyList() {
+        QuestionResponse result = new QuestionMapper().toResponse(
+                Map.of("id", "1", "questionText", "Q", "questionTypes", "Coding"));
+
+        assertEquals(List.of(), result.questionTypes());
+    }
 }
