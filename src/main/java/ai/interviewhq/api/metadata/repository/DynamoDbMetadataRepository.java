@@ -19,14 +19,20 @@ import java.util.Map;
 @Repository
 public class DynamoDbMetadataRepository implements MetadataRepository {
     private static final Logger log = LoggerFactory.getLogger(DynamoDbMetadataRepository.class);
+    private static final String COMPANIES = "META#COMPANIES";
+    private static final String QUESTION_TYPES = "META#QUESTION_TYPES";
+
     private final DynamoDbClient client;
-    private final String table;
+    private final String experienceTable;
+    private final String questionTable;
 
     public DynamoDbMetadataRepository(
             DynamoDbClient client,
-            @Value("${aws.dynamodb.experience-table}") String table) {
+            @Value("${aws.dynamodb.experience-table}") String experienceTable,
+            @Value("${aws.dynamodb.question-table}") String questionTable) {
         this.client = client;
-        this.table = table;
+        this.experienceTable = experienceTable;
+        this.questionTable = questionTable;
     }
 
     @Override
@@ -34,6 +40,8 @@ public class DynamoDbMetadataRepository implements MetadataRepository {
             String partitionKey,
             int limit,
             Map<String, String> startKey) {
+        String table = tableFor(partitionKey);
+
         QueryRequest.Builder request = QueryRequest.builder()
                 .tableName(table)
                 .keyConditionExpression("#pk = :pk")
@@ -66,6 +74,12 @@ public class DynamoDbMetadataRepository implements MetadataRepository {
             log.warn("dynamodb_query_failed operation=metadata_list");
             throw ex;
         }
+    }
+
+    private String tableFor(String partitionKey) {
+        if (COMPANIES.equals(partitionKey)) return experienceTable;
+        if (QUESTION_TYPES.equals(partitionKey)) return questionTable;
+        throw new IllegalArgumentException("Unsupported metadata partition key: " + partitionKey);
     }
 
     private static Map<String, String> stringKey(Map<String, AttributeValue> key) {
