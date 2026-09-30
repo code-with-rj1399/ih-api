@@ -120,10 +120,10 @@ T003, T013, T014.
 
 **Acceptance criteria**
 
-- [ ] Results are deterministic.
-- [ ] No unbounded Scan is used.
-- [ ] Values correspond to supported stored data/taxonomy.
-- [ ] Pagination or a documented bounded result is implemented.
+- [x] Results are deterministic.
+- [x] No unbounded Scan is used.
+- [x] Values correspond to supported stored data/taxonomy.
+- [x] Pagination or a documented bounded result is implemented.
 
 **Tests**
 
@@ -132,7 +132,7 @@ T003, T013, T014.
 
 **Implementation notes**
 
-The current schema provides question-type taxonomy but no metadata partition that can enumerate distinct companies or types efficiently. This task is blocked until a bounded metadata projection/access path is added to the crawler/database write path. Do not invent a search index or Scan.
+The crawler now materializes META#COMPANIES and META#QUESTION_TYPES partitions from observed persisted values. hq-API uses bounded Query pagination over those partitions and never scans canonical entities.
 
 ---
 
