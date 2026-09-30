@@ -1,110 +1,156 @@
 # InterviewHQ hq-API Public API
 
-This document is the UI-facing contract for hq-API. It is intentionally separate from crawler/admin API documentation.
+This document is the UI-facing contract for hq-API. It is separate from crawler/admin API documentation.
 
-## Base
+## Base conventions
 
-All public application endpoints use: `/api/v1`
+All public application endpoints use /api/v1.
 
-The browser talks to hq-API only. DynamoDB keys and persistence structures are never part of the public contract.
+- Collection limit defaults to 25 and is bounded to 1–100.
+- Cursors are opaque URL-safe values; clients must not parse or construct them.
+- Supported sorting is newest and oldest where documented.
+- Browser clients talk to hq-API only; DynamoDB keys and persistence structures are never part of the public contract.
 
-## Common collection response
+### Collection response
 
-```json
-{ "items": [], "pagination": { "limit": 25, "nextCursor": null, "hasMore": false } }
-```
+~~~json
+{
+  "items": [],
+  "pagination": {
+    "limit": 25,
+    "nextCursor": null,
+    "hasMore": false
+  }
+}
+~~~
 
-`limit` defaults to 25 and is bounded to 1–100. `cursor` is an opaque URL-safe token.
+### Single-resource response
 
-## Common single-resource response
+~~~json
+{
+  "item": {}
+}
+~~~
 
-```json
-{"item": {}}
-```
+### Error response
 
-## Errors
+~~~json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Interview question not found",
+    "details": []
+  },
+  "timestamp": "2026-09-30T00:00:00Z",
+  "path": "/api/v1/questions/123"
+}
+~~~
 
-```json
-{"error":{"code":"NOT_FOUND","message":"Interview question not found","details":[]},"timestamp":"2026-09-30T00:00:00Z","path":"/api/v1/questions/123"}
-```
-
-Common codes currently implemented:
-- `VALIDATION_ERROR`
-- `INVALID_CURSOR`
-- `INVALID_SORT`
-- `NOT_FOUND`
-- `INTERNAL_ERROR`
-
-## Health
-
-### GET /api/v1/health
-
-Returns service health information.
+Common error codes:
+- VALIDATION_ERROR
+- INVALID_CURSOR
+- INVALID_SORT
+- NOT_FOUND
+- INTERNAL_ERROR
 
 ## Questions
 
 ### GET /api/v1/questions
 
-Returns a bounded question collection.
+Returns recent interview questions.
 
 Query parameters:
 
-| Parameter | Values |
-|---|---|
-| `limit` | 1–100, default 25 |
-| `cursor` | opaque pagination token |
-| `sort` | `newest` or `oldest` |
-| `company` | optional company name |
-| `type` | optional canonical question type |
+| Parameter | Default | Bounds / values |
+|---|---:|---|
+| limit | 25 | 1–100 |
+| cursor | — | opaque, max 2048 chars |
+| sort | newest | newest, oldest |
+| company | — | max 200 chars |
+| type | — | max 100 chars |
 
-The question list uses DynamoDB materialized question projections. It does not use a table Scan.
-
-When both `company` and `type` are supplied, the company projection is queried and the type is applied as a bounded DynamoDB filter.
+Access behavior:
+- Default and type-only requests use materialized question projections.
+- Company filtering uses the company question projection.
+- Company + type uses the company partition with a bounded residual type filter.
+- No table Scan is used.
 
 ### GET /api/v1/questions/{id}
 
-Returns one question by numeric id.
+Returns one question by numeric ID.
 
 The implementation resolves the numeric ID lookup and then reads the canonical question item. Persistence keys, dedupe hashes, and model metadata are not returned.
 
 ## Experiences
 
+### GET /api/v1/experiences
+
+Returns interview experiences ordered by posted time.
+
+Query parameters:
+
+| Parameter | Default | Bounds / values |
+|---|---:|---|
+| limit | 25 | 1–100 |
+| cursor | — | opaque, max 2048 chars |
+| sort | newest | newest, oldest |
+| company | — | max 200 chars |
+
+Global browsing uses the EINDEX#POSTED Query partition. Company filtering uses EINDEX#COMPANY#{normalizedCompany}. Unknown companies return an empty collection. No table Scan is used.
+
 ### GET /api/v1/experiences/{id}
 
-Returns one interview experience by numeric id.
-
-The canonical experience item is read directly with GetItem.
+Returns one interview experience by numeric ID using canonical GetItem access.
 
 ### GET /api/v1/experiences/{id}/questions
 
-Returns questions belonging to an experience using the `EXPERIENCE#{id}` item collection and a `QUESTION#` sort-key prefix.
+Returns questions belonging to an experience.
 
-Pagination is opaque and bounded.
+Query parameters:
+- limit: 1–100, default 25.
+- cursor: opaque, max 2048 chars.
+
+The implementation validates that the experience exists, then queries the EXPERIENCE#{id} question adjacency path with a QUESTION# sort-key prefix. It does not perform one read per question.
+
+## Metadata
+
+### GET /api/v1/meta/companies
+
+Returns materialized company metadata.
+
+### GET /api/v1/meta/question-types
+
+Returns materialized question-type metadata.
+
+Both endpoints support:
+- limit: 1–100, default 25.
+- cursor: opaque, max 2048 chars.
+
+Example item:
+
+~~~json
+{
+  "name": "Amazon",
+  "slug": "amazon"
+}
+~~~
+
+Metadata uses dedicated DynamoDB Query partitions and does not Scan canonical question or experience data.
 
 ## CORS
 
-Allowed origins are configured through `API_CORS_ALLOWED_ORIGINS`.
+Allowed origins are configured through API_CORS_ALLOWED_ORIGINS.
 
-Default local development value: `http://localhost:3000`
+Default local development value: http://localhost:3000
 
-Only GET and OPTIONS are enabled for the public API CORS configuration, and credentialed wildcard CORS is not enabled.
+Only GET and OPTIONS are enabled for public API CORS configuration, and credentialed wildcard CORS is not enabled.
 
 ## Persistence boundary
 
-The public API implementation uses:
-- DynamoDB GetItem for canonical detail resources.
-- DynamoDB Query for question projections and experience question collections.
-- Opaque cursors for LastEvaluatedKey state.
-- No table Scan for public list paths.
+Public list/detail paths use DynamoDB Query, GetItem, or bounded BatchGetItem access patterns. Raw LastEvaluatedKey values are encoded into opaque cursors.
 
-DynamoDB `pk`, `sk`, `entityType`, projection keys, and raw LastEvaluatedKey values are implementation details.
+DynamoDB pk, sk, entityType, projection keys, and raw LastEvaluatedKey values are implementation details.
 
-## Deliberately unavailable until the crawler provides access paths
+## Scope
 
-The following APIs are not exposed yet because the current crawler schema does not provide the required efficient global access paths:
-- `GET /api/v1/experiences`
-- `GET /api/v1/experiences?company=...`
-- `GET /api/v1/meta/companies`
-- `GET /api/v1/meta/question-types`
-
-The hq-API must not implement these by scanning canonical experience/question data. The required materialized projections should be added to the crawler/database write path first, then these endpoints can be implemented against Query access patterns.
+This document covers only public UI-facing hq-API endpoints. It does not document crawler ingestion, crawler operations, admin endpoints, or /dev/** behavior.
