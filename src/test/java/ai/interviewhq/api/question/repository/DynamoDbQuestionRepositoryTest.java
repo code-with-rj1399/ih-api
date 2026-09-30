@@ -45,6 +45,7 @@ class DynamoDbQuestionRepositoryTest {
                                 Map.of(
                                         "pk", AttributeValue.builder().s("QINDEX#EXTRACTED").build(),
                                         "sk", AttributeValue.builder().s("2026-09-30T10:00:00Z#7").build(),
+                                        "entityType", AttributeValue.builder().s("InterviewQuestion").build(),
                                         "data", AttributeValue.builder().m(Map.of(
                                                 "id", AttributeValue.builder().n("7").build(),
                                                 "questionText", AttributeValue.builder().s("Q").build())).build())))
@@ -53,10 +54,10 @@ class DynamoDbQuestionRepositoryTest {
                                 "sk", AttributeValue.builder().s("2026-09-30T10:00:00Z#7").build()))
                         .build());
 
-        var result = new DynamoDbQuestionRepository(client, new ObjectMapper(), "table")
-                .list("QINDEX#EXTRACTED", false, 25,
-                        Map.of("pk", "QINDEX#EXTRACTED", "sk", "2026-09-30T11:00:00Z#8"),
-                        null, Map.of());
+        var result = new DynamoDbQuestionRepository(client, new ObjectMapper(), "table").list(
+                "QINDEX#EXTRACTED", false, 25,
+                Map.of("pk", "QINDEX#EXTRACTED", "sk", "2026-09-30T11:00:00Z#8"),
+                null, Map.of());
 
         assertEquals(1, result.items().size());
         assertEquals("7", result.items().get(0).id().toString());
