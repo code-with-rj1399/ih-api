@@ -85,6 +85,10 @@ public class DynamoDbQuestionRepository implements QuestionRepository {
                 ":pk",
                 AttributeValue.builder().s(partitionKey).build());
 
+        if (filterExpression != null && !filterExpression.isBlank()) {
+            expressionValues.putAll(filterValues == null ? Map.of() : filterValues);
+        }
+
         QueryRequest.Builder request = QueryRequest.builder()
                 .tableName(table)
                 .keyConditionExpression("#pk = :pk")
@@ -99,7 +103,6 @@ public class DynamoDbQuestionRepository implements QuestionRepository {
 
         if (filterExpression != null && !filterExpression.isBlank()) {
             request.filterExpression(filterExpression);
-            expressionValues.putAll(filterValues == null ? Map.of() : filterValues);
         }
 
         QueryResponse response = client.query(request.build());
