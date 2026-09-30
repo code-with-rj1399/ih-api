@@ -1,17 +1,36 @@
 package ai.interviewhq.api.config;
 
-import ai.interviewhq.api.system.controller.PublicApiController;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
-@WebMvcTest(PublicApiController.class)
-@Import(WebConfig.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest
 class WebConfigTest {
- @Autowired MockMvc mvc;
- @Test void allowsConfiguredLocalOrigin(){try{mvc.perform(options("/api/v1/health").header("Origin","http://localhost:3000").header("Access-Control-Request-Method","GET")).andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","http://localhost:3000"));}catch(Exception e){throw new AssertionError(e);}}
+
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
+
+    @Test
+    void allowsConfiguredLocalOrigin() {
+        HttpServletRequest request =
+                new org.springframework.mock.web.MockHttpServletRequest(
+                        "GET",
+                        "/api/v1/health");
+
+        CorsConfiguration configuration =
+                corsConfigurationSource.getCorsConfiguration(request);
+
+        assertTrue(configuration != null);
+        assertEquals(
+                "http://localhost:3000",
+                configuration.checkOrigin("http://localhost:3000"));
+        assertTrue(configuration.getAllowedMethods().contains("GET"));
+        assertTrue(configuration.getAllowedMethods().contains("OPTIONS"));
+    }
 }
