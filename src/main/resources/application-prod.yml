@@ -1,8 +1,10 @@
-# Production: AWS DynamoDB via IAM role. Table auto-create is off.
-ih:
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+aws:
+  region: ${AWS_REGION:ap-south-1}
   dynamodb:
-    table: ${DYNAMODB_TABLE:interview-hq}
     endpoint: ${DYNAMODB_ENDPOINT:}
-    auto-create-table: ${DYNAMODB_AUTO_CREATE_TABLE:false}
-  security:
-    enabled: ${IH_SECURITY_ENABLED:true}
+    table: ${DYNAMODB_TABLE:interviewhq-prod}
