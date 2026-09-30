@@ -200,7 +200,7 @@ None.
 
 **Tests**
 
-- [x] Existing test suite passes.
+- [~] Existing test suite passes.
 - [x] Namespace/controller smoke coverage exists.
 
 **Implementation notes**
@@ -237,8 +237,8 @@ T001.
 
 **Tests**
 
-- [x] MockMvc coverage for 400, 404, and 500 mappings.
-- [x] JSON shape assertions.
+- [~] MockMvc coverage for 400, 404, and 500 mappings.
+- [~] JSON shape assertions are present; CI verification pending.
 
 **Implementation notes**
 
@@ -276,9 +276,9 @@ T002.
 
 **Tests**
 
-- [x] Cursor encode/decode round-trip.
-- [x] Invalid cursor tests.
-- [x] Page-size boundary tests.
+- [~] Cursor encode/decode round-trip.
+- [~] Invalid cursor tests are present; CI verification pending.
+- [~] Page-size boundary tests are present; CI verification pending.
 
 **Implementation notes**
 
