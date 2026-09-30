@@ -83,7 +83,7 @@ class PublicApiContractTest {
 
     @Test
     void experienceCollectionAndCompanyFilterContract() throws Exception {
-        when(experiences.list(25, null, "newest", "Amazon"))
+        when(experiences.list(null, null, "newest", "Amazon"))
                 .thenReturn(new ApiCollectionResponse<>(
                         List.of(new ExperienceSummaryResponse(
                                 4, "SDE Interview", "Amazon", "SDE II", "L5",
@@ -101,7 +101,7 @@ class PublicApiContractTest {
         when(experiences.find(4)).thenReturn(new ExperienceResponse(
                 4, "Glassdoor", "SDE Interview", null, null, null, null,
                 "Amazon", "SDE II", "L5", "Seattle", 5f, 2, null));
-        when(questions.byExperience(4, 25, null))
+        when(questions.byExperience(4, null, null))
                 .thenReturn(new ApiCollectionResponse<>(
                         List.of(new QuestionSummaryResponse(
                                 7, 4, "Two Sum", List.of("Coding"), .9f,
@@ -119,7 +119,7 @@ class PublicApiContractTest {
 
     @Test
     void metadataContractsAreBoundedAndPaginated() throws Exception {
-        when(metadata.companies(100, null))
+        when(metadata.companies(null, null))
                 .thenReturn(new ApiCollectionResponse<>(
                         List.of(new MetadataItemResponse("Amazon", "amazon")),
                         new ApiCollectionResponse.Pagination(100, null, false)));
