@@ -6,7 +6,7 @@ Continue from Parts 1–2. These tasks remain API-only and are intended to be im
 
 - Total: 24
 - Verified: 0
-- Implemented, CI pending: 6 (T017–T021)
+- Implemented, CI pending: 5 (T017–T021)
 - Blocked: T015–T016
 - Not started: T022+
 
