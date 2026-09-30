@@ -108,11 +108,8 @@ public class DynamoDbQuestionRepository implements QuestionRepository {
 
         try {
             QueryResponse response = client.query(request.build());
-            // QINDEX partitions are question projections. Do not require entityType
-            // to be projected at the top level of the GSI item: some DynamoDB index
-            // projections contain only pk/sk/data, which previously caused valid
-            // question rows to be discarded after DynamoDB had already returned them.
             List<QuestionListProjection> items = response.items().stream()
+                    .filter(this::isQuestionItem)
                     .map(item -> mapper.convertValue(
                             DynamoDbDataMapper.unwrapMap(item), QuestionListProjection.class))
                     .toList();
