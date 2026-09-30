@@ -4,7 +4,7 @@ services:
     container_name: ih-dynamodb
     command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
     ports:
-      - "8000:8000"
+      - "8001:8000"
 
   api:
     build:
@@ -14,10 +14,10 @@ services:
     depends_on:
       - dynamodb-local
     ports:
-      - "8091:8091"
+      - "8000:8000"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SERVER_PORT: 8091
+      SERVER_PORT: 8000
       AWS_REGION: ap-south-1
       AWS_ACCESS_KEY_ID: dummy
       AWS_SECRET_ACCESS_KEY: dummy
