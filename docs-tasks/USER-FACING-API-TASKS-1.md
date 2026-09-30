@@ -1,373 +1,425 @@
-# InterviewHQ User-Facing API Tasks — Part 1 (Foundation)
+# InterviewHQ hq-API — User-Facing API Implementation Tasks
 
-These tasks define the public API surface that the InterviewHQ UI (and a static debugger page) will consume.  
-Scope is **read-only user-facing APIs only**. No crawler, ingestion, admin, or `/dev/**` endpoints.
+These tasks are the source of truth for the **InterviewHQ UI → hq-API** contract.
 
-Namespace: `/api/v1/...`  
-Table (configurable): `interviewhq-dev` / production equivalent  
-Existing foundation: Spring Boot 3.5, DynamoDB client bean, `/api/hello`, validation starter.
+**First session (this commit): planning only.** No Java, API, DynamoDB, configuration, crawler, ingestion, admin, or UI behavior is changed.
 
----
+## Grok — Start Here
 
-## T001 — Public API conventions and package foundation
+Repository: https://github.com/code-with-rj1399/ih-api  
+Branch: `ih-apis-user-facing`
 
-Status: NOT_STARTED
+Start by reading these task files and inspecting the repository. Pick the first unfinished (`- [ ]`) task whose dependencies are satisfied, implement only that task, run its tests, mark it complete, commit it, and push to `ih-apis-user-facing`. After pushing, immediately continue with the next unfinished dependency-satisfied task. Never combine multiple tasks into one commit.
 
-### Objective
-Establish package layout, API versioning convention, and shared constants so all subsequent user-facing endpoints follow one coherent structure.
+## How to use these files
 
-### API responsibility
-Defines the public API namespace and packaging that every later endpoint will live under.
+Each session must:
 
-### Endpoints
-None (foundation only).
+1. Read the task files.
+2. Implement the first unfinished task in dependency order.
+3. Run that task's tests.
+4. Mark the task complete (`- [x] Status`) and update **Progress** only when acceptance criteria and tests pass.
+5. Commit with a focused message.
+6. `git push origin ih-apis-user-facing`.
+7. Immediately continue with the next unfinished dependency-satisfied task.
 
-### Request contract
-N/A
+Never mark a task complete unless its acceptance criteria and tests pass. If blocked, document the blocker in the task file.
 
-### Response contract
-N/A
+## Repository snapshot
 
-### Error contract
-N/A
+Inspected current `ih-api` branch against `master`.
 
-### DynamoDB access pattern
-N/A
+| Area | What exists today |
+|---|---|
+| Service | Spring Boot API service under `ai.interviewhq.api` |
+| Persistence | DynamoDB client/configuration foundation |
+| Existing endpoint | `/api/hello` |
+| Production boundary | InterviewHQ UI → hq-API → DynamoDB |
+| Public API | `/api/v1/**` planned namespace |
+| Scope | API-only implementation consumed by InterviewHQ UI |
 
-### Dependencies
-None
+Do not assume public indexes/projections exist without verifying the actual repository and crawler schema.
 
-### Acceptance criteria
-- Packages exist under `ai.interviewhq.api` for: `controller.v1`, `dto`, `service`, `repository`, `exception`, `config` (extend existing config only as needed).
-- Public controllers are annotated under `/api/v1`.
-- No change to existing `/api/hello` behaviour.
-- README briefly documents the `/api/v1` convention.
+## Locked architecture decisions
 
-### Testing requirements
-- Existing `HelloControllerTest` still passes.
-- Smoke compile/test of empty package structure.
+1. hq-API is **API-only**. No Next.js, React, HTML, static UI, or frontend state.
+2. Public application APIs use `/api/v1/**`.
+3. Browser clients never access DynamoDB directly.
+4. Public DTOs hide DynamoDB `pk`, `sk`, `entityType`, projection keys, and persistence internals.
+5. AWS DynamoDB remains the database.
+6. User-facing reads use `Query`, `GetItem`, or bounded `BatchGetItem`; no Scan for normal traffic.
+7. Pagination uses opaque cursors; raw DynamoDB keys are never exposed.
+8. Default collection page size is 25; maximum is 100 unless explicitly justified.
+9. Follow the crawler's documented `InterviewExperience` and `InterviewQuestion` schema; do not invent unsupported fields.
+10. Public APIs are read-only for this feature.
+11. Crawler→API ingestion, crawler operations, admin APIs, and `/dev/**` are out of scope.
+12. Search/filter behavior must reflect actual DynamoDB access patterns.
+13. Missing access paths become explicit projection/index tasks before dependent API tasks.
+14. Keep contracts stable and implementation-friendly for a future Next.js consumer.
 
-### Implementation notes
-- Prefer `ai.interviewhq.api.controller.v1` for all public REST controllers.
-- Do not introduce security or OpenAPI yet (later tasks).
-- Keep DynamoDB table name driven by `aws.dynamodb.table` property.
+## Source-of-truth data model
 
----
+### InterviewExperience
 
-## T002 — Common error response and exception handling
+Fields:
 
-Status: NOT_STARTED
+`id, sourceId, crawlRunId, sourcePlatform, title, summary, author, postedAt, originalPostUrl, company, role, level, location, candidateYoE, questionCount, dedupeHash, createdAt`
 
-### Objective
-Introduce one consistent public error JSON shape and a global exception handler for validation and not-found cases.
+Canonical item:
 
-### API responsibility
-All public APIs return the same error envelope on failure.
+```
+PK = EXPERIENCE#{experienceId}
+SK = ENTITY
+entityType = InterviewExperience
+```
 
-### Endpoints
-N/A (cross-cutting)
+### InterviewQuestion
 
-### Request contract
-N/A
+Fields:
 
-### Response contract
+`id, experienceId, problemUrl, questionTypes[], difficulty, questionText, questionDescription, candidateApproach, confidence, questionParticularity, modelName, dedupeHash, extractedAt, createdAt`
+
+Canonical item:
+
+```
+PK = EXPERIENCE#{experienceId}
+SK = QUESTION#{questionDedupeHash}
+entityType = InterviewQuestion
+```
+
+Question ID lookup:
+
+```
+PK = QUESTION_ID#{questionId}
+SK = LOOKUP
+entityType = QuestionIdLookup
+```
+
+### Experience/question relationship
+
+```
+EXPERIENCE#123
+  +-- ENTITY
+  +-- QUESTION#abc
+  +-- QUESTION#def
+```
+
+## Public API conventions
+
+Collection response:
+
+```json
+{
+  "items": [],
+  "pagination": {
+    "limit": 25,
+    "nextCursor": null,
+    "hasMore": false
+  }
+}
+```
+
+Single resource response:
+
+```json
+{
+  "item": {}
+}
+```
+
+Error response:
+
 ```json
 {
   "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "pageSize must be between 1 and 50",
-    "details": [
-      { "field": "pageSize", "reason": "must be <= 50" }
-    ]
+    "code": "NOT_FOUND",
+    "message": "Interview question not found",
+    "details": []
   },
-  "timestamp": "2026-09-30T08:00:00Z",
-  "path": "/api/v1/questions"
+  "timestamp": "2026-09-30T00:00:00Z",
+  "path": "/api/v1/questions/123"
 }
 ```
 
-### Error contract
-| Status | code | When |
-|--------|------|------|
-| 400 | VALIDATION_ERROR | Query params/body fail validation |
-| 400 | INVALID_CURSOR | Cursor cannot be decoded |
-| 404 | NOT_FOUND | Resource id not found |
-| 500 | INTERNAL_ERROR | Unexpected failure (no internal details leaked) |
+## Testing conventions
 
-### DynamoDB access pattern
-N/A
+- JUnit 5 / Spring Boot test stack.
+- Prefer MockMvc for controller contracts.
+- Mock DynamoDB client/repositories for repository/service tests.
+- CI must not require real AWS credentials.
+- No new test infrastructure unless a later task proves it necessary.
 
-### Dependencies
-T001
+## Progress
 
-### Acceptance criteria
-- `@ControllerAdvice` maps `MethodArgumentNotValidException`, custom `NotFoundException`, `InvalidCursorException` to the envelope above.
-- 500 responses never expose stack traces or DynamoDB exception messages to clients.
-- Unit test for at least one 400 and one 404 mapping.
+- Total: 24
+- Completed: 0
+- Remaining: 24
 
-### Testing requirements
-- MockMvc tests asserting status + JSON error shape.
-- No change to `/api/hello` success path.
+Planning commit: task documentation only.
 
-### Implementation notes
-- Place error DTO under `dto.ErrorResponse`.
-- Use RFC 7807-inspired fields only as documented; keep one shape for the whole public API.
+## Task list
+
+## T001 — Public API conventions and package foundation
+
+- [ ] Status
+
+**Goal**
+
+Establish package layout and base conventions for the public API namespace.
+
+**API responsibility**
+
+All future user-facing controllers use one coherent versioned API structure.
+
+**Endpoints**
+
+None; foundation only.
+
+**Dependencies**
+
+None.
+
+**Acceptance criteria**
+
+- [ ] Public controllers consistently use `/api/v1`.
+- [ ] Existing `/api/hello` behavior remains unchanged.
+- [ ] No crawler, ingestion, admin, or `/dev` endpoint is modified.
+
+**Tests**
+
+- [ ] Existing test suite passes.
+- [ ] Namespace/controller smoke coverage exists.
+
+**Implementation notes**
+
+Use repository conventions under `ai.interviewhq.api`. Do not introduce unrelated infrastructure.
 
 ---
 
-## T003 — Cursor pagination model
+## T002 — Common DTO envelope and error handling
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Define a single opaque-cursor pagination contract used by all list endpoints.
+**Goal**
 
-### API responsibility
-Consistent list pagination across questions, experiences, and filtered lists.
+Introduce shared public response/error models and exception handling.
 
-### Endpoints
-Applies to all `GET` collection endpoints.
+**API responsibility**
 
-### Request contract
-Query parameters (all optional unless noted):
-| Name | Type | Default | Validation |
-|------|------|---------|------------|
-| `limit` | integer | 20 | 1–50 inclusive |
-| `cursor` | string | null | opaque; reject malformed |
+Provide consistent collection, single-resource, validation, not-found, and internal-error responses.
 
-### Response contract
-```json
-{
-  "data": [ /* items */ ],
-  "pagination": {
-    "limit": 20,
-    "nextCursor": "eyJwayI6IlFVRVNUSU9OIy4uLiIsInNrIjoiRU5USVRZIn0",
-    "hasMore": true
-  }
-}
-```
-When no more pages: `nextCursor` is `null` and `hasMore` is `false`.
+**Endpoints**
 
-### Error contract
-- 400 INVALID_CURSOR if cursor is present but invalid Base64/JSON or points to unknown keys.
-- 400 VALIDATION_ERROR if `limit` out of range.
+Cross-cutting for `/api/v1/**`.
 
-### DynamoDB access pattern
-- Encode `LastEvaluatedKey` (PK/SK and any GSI keys used) into an opaque Base64URL JSON cursor.
-- Never return raw DynamoDB keys to clients.
-- On next request, decode cursor → `ExclusiveStartKey`.
+**Dependencies**
 
-### Dependencies
-T002
+T001.
 
-### Acceptance criteria
-- Shared `PaginationRequest` / `PaginationResponse` DTOs.
-- Utility to encode/decode cursor; invalid decode throws `InvalidCursorException`.
-- Default limit 20, max 50 documented and enforced.
+**Acceptance criteria**
 
-### Testing requirements
-- Unit tests for encode/decode round-trip and invalid cursor.
-- Bound checks for limit.
+- [ ] Shared public error envelope exists.
+- [ ] Validation and not-found errors map consistently.
+- [ ] Unexpected exceptions do not expose DynamoDB internals.
 
-### Implementation notes
-- Prefer Base64URL of compact JSON containing only the keys needed for the query.
-- Empty result: `data: []`, `hasMore: false`, `nextCursor: null`.
+**Tests**
+
+- [ ] MockMvc coverage for 400, 404, and 500 mappings.
+- [ ] JSON shape assertions.
+
+**Implementation notes**
+
+Keep the contract small and stable; do not expose stack traces.
 
 ---
 
-## T004 — Domain models and public DTOs for Question and Experience
+## T003 — Opaque cursor pagination
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Define internal DynamoDB item shapes (read-only) and public API DTOs that hide PK/SK/entityType/GSI attributes.
+**Goal**
 
-### API responsibility
-Clean JSON representations the UI can consume without knowing DynamoDB internals.
+Implement one cursor codec and pagination model for collection APIs.
 
-### Endpoints
-N/A (models only)
+**API responsibility**
 
-### Request contract
-N/A
+Provides bounded pagination without exposing DynamoDB keys.
 
-### Response contract
-**Question (public)**
-```json
-{
-  "id": "8a91c7...",
-  "text": "Design a notification system.",
-  "description": "Design a notification system that can deliver notifications reliably...",
-  "type": "System Design",
-  "topics": ["Notifications", "Distributed Systems"],
-  "company": "Amazon",
-  "role": null,
-  "sourceUrl": "https://example.com/interview/123",
-  "problemUrl": null,
-  "sourceName": "Example",
-  "postedAt": "2026-09-23T10:20:00Z",
-  "crawledAt": "2026-09-23T12:00:00Z",
-  "confidence": 0.92,
-  "experienceId": null
-}
-```
+**Endpoints**
 
-**Experience (public)**
-```json
-{
-  "id": "exp-...",
-  "title": "Amazon SDE II Onsite",
-  "company": "Amazon",
-  "role": "SDE II",
-  "level": "L5",
-  "location": null,
-  "sourceUrl": "https://...",
-  "sourceName": "Example",
-  "postedAt": "2026-09-20T00:00:00Z",
-  "summary": null,
-  "questionIds": ["8a91c7..."]
-}
-```
+Applies to all public collection endpoints.
 
-### Error contract
-N/A
+**Dependencies**
 
-### DynamoDB access pattern
-Map from documented schema:
-- Question: `PK = QUESTION#{questionId}`, `SK = ENTITY`, attributes as in crawler schema (`questionText`, `questionType`, `company`, `postedAt`, etc.).
-- Experience: follow crawler Experience entity when present; if Experience is not yet fully materialised in the table, DTOs still define the public shape for later tasks.
+T002.
 
-### Dependencies
-T001
+**Acceptance criteria**
 
-### Acceptance criteria
-- Public DTOs never include `PK`, `SK`, `entityType`, `GSI*`, or internal hashes beyond the public `id`.
-- Mapper(s) from AttributeValue map / internal record → public DTO.
-- Jackson serialises dates as ISO-8601 UTC (already configured).
+- [ ] Cursor round-trips required DynamoDB key data.
+- [ ] Malformed cursor returns a documented 400.
+- [ ] Default limit is 25.
+- [ ] Maximum limit is 100.
+- [ ] Raw DynamoDB `LastEvaluatedKey` is never returned.
 
-### Testing requirements
-- Unit tests for mapper with sample DynamoDB attribute maps.
-- Null-safe mapping for optional fields.
+**Tests**
 
-### Implementation notes
-- Align field names with product UI needs (company, type, postedAt, topics).
-- `id` for questions = `questionId` (dedupe hash) from schema.
+- [ ] Cursor encode/decode round-trip.
+- [ ] Invalid cursor tests.
+- [ ] Page-size boundary tests.
+
+**Implementation notes**
+
+Prefer URL-safe opaque Base64 JSON. Cursor contents are implementation details.
 
 ---
 
-## T005 — Question repository: GetItem by id and Query recent via GSI
+## T004 — Public Question DTO and mapper
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Implement DynamoDB repository methods required for single-question and recent-questions reads using Query (not Scan).
+**Goal**
 
-### API responsibility
-Efficient data access for question APIs.
+Define the public question representation and mapper from persisted data.
 
-### Endpoints
-Supports later controllers; no HTTP yet.
+**API responsibility**
 
-### Request contract
-N/A
+Provides the stable Question object consumed by the InterviewHQ UI.
 
-### Response contract
-N/A
+**Endpoints**
 
-### Error contract
-N/A
+Consumed by question endpoints.
 
-### DynamoDB access pattern
-| Method | Pattern |
-|--------|---------|
-| `getById(questionId)` | `GetItem` PK=`QUESTION#{id}` SK=`ENTITY` |
-| `listRecent(limit, exclusiveStartKey)` | Query on GSI that supports time order (prefer GSI with SK containing `postedAt` or equivalent recent index from schema). If only company/type GSIs exist, use a dedicated “recent” access path documented in schema (GSI2-style or static partition for recent). **Must not Scan.** |
-| Pagination | Pass `ExclusiveStartKey` / return `LastEvaluatedKey` |
+**Dependencies**
 
-From crawler schema access patterns:
-- Get a question: `PK = QUESTION#{id}`
-- Get recent questions by type: GSI2
-- Get recent company questions: GSI1
+T001, T002.
 
-### Dependencies
-T003, T004
+**Acceptance criteria**
 
-### Acceptance criteria
-- Repository uses injected `DynamoDbClient` and configured table name.
-- `getById` returns empty Optional when missing.
-- List methods return page of items + optional last key.
-- No full-table Scan for list paths.
+- [ ] DTO contains only supported public fields.
+- [ ] DynamoDB keys/storage fields are hidden.
+- [ ] Optional fields are null-safe.
+- [ ] `questionTypes` is represented consistently.
 
-### Testing requirements
-- Unit tests with mocked DynamoDbClient (or local DynamoDB integration if available in CI).
-- Verify KeyConditionExpression / GetItem request shapes.
+**Tests**
 
-### Implementation notes
-- Table name from `aws.dynamodb.table`.
-- Keep repository free of HTTP/DTO concerns; return internal models or maps that T004 mappers consume.
+- [ ] Mapper tests with representative persisted items.
+- [ ] Optional-field tests.
+
+**Implementation notes**
+
+Use the crawler schema as the field source. Do not invent topic fields absent from persisted data.
 
 ---
 
-## T006 — GET /api/v1/questions/{id} — question detail
+## T005 — Public Experience DTO and mapper
 
-Status: NOT_STARTED
+- [ ] Status
 
-### Objective
-Expose a single public question by id.
+**Goal**
 
-### API responsibility
-Question detail for UI and debugger.
+Define the public interview-experience representation and mapper.
 
-### Endpoints
-`GET /api/v1/questions/{id}`
+**API responsibility**
 
-### Request contract
-| Param | In | Type | Required |
-|-------|-----|------|----------|
-| `id` | path | string | yes (non-blank) |
+Provides the stable Experience object consumed by the InterviewHQ UI.
 
-### Response contract
-200:
-```json
-{
-  "data": {
-    "id": "8a91c7...",
-    "text": "Design a notification system.",
-    "description": "...",
-    "type": "System Design",
-    "topics": ["Notifications"],
-    "company": "Amazon",
-    "role": null,
-    "sourceUrl": "https://...",
-    "problemUrl": null,
-    "sourceName": "Example",
-    "postedAt": "2026-09-23T10:20:00Z",
-    "crawledAt": "2026-09-23T12:00:00Z",
-    "confidence": 0.92,
-    "experienceId": null
-  }
-}
-```
+**Endpoints**
 
-### Error contract
-- 400 if `id` blank
-- 404 NOT_FOUND if question missing
-- 500 INTERNAL_ERROR on unexpected failures
+Consumed by experience endpoints.
 
-### DynamoDB access pattern
-`GetItem` on `PK = QUESTION#{id}`, `SK = ENTITY`.
+**Dependencies**
 
-### Dependencies
-T002, T004, T005
+T001, T002.
 
-### Acceptance criteria
-- Controller → service → repository → public DTO.
-- 404 when item absent.
-- No internal DynamoDB attributes in JSON.
+**Acceptance criteria**
 
-### Testing requirements
-- MockMvc: 200 with fixture, 404, blank id → 400.
-- Service unit test.
+- [ ] DTO maps documented experience fields.
+- [ ] Internal storage fields are hidden.
+- [ ] Optional fields are null-safe.
 
-### Implementation notes
-- Path prefix `/api/v1`.
-- Reuse error envelope from T002.
+**Tests**
+
+- [ ] Mapper tests.
+- [ ] Missing optional-field tests.
+
+**Implementation notes**
+
+Preserve useful provenance such as source URL/platform, dates, company, role, and location.
+
+---
+
+## T006 — Question repository access paths
+
+- [ ] Status
+
+**Goal**
+
+Implement repository methods for question detail and experience-scoped question reads.
+
+**API responsibility**
+
+Creates the DynamoDB read layer used by public question APIs.
+
+**Endpoints**
+
+No HTTP endpoint in this task.
+
+**Dependencies**
+
+T003, T004.
+
+**Acceptance criteria**
+
+- [ ] Question detail follows the documented question ID lookup and canonical item path.
+- [ ] Experience questions use Query on `EXPERIENCE#{id}` with `QUESTION#` children.
+- [ ] No Scan is used.
+- [ ] Repository returns pagination metadata.
+
+**Tests**
+
+- [ ] Mock DynamoDB request tests.
+- [ ] Key-condition and cursor handling tests.
+
+**Implementation notes**
+
+Verify the actual repository/schema before coding; do not guess key names.
+
+---
+
+## T007 — Experience repository access paths
+
+- [ ] Status
+
+**Goal**
+
+Implement repository methods for experience detail and required list reads.
+
+**API responsibility**
+
+Creates the DynamoDB read layer used by public experience APIs.
+
+**Endpoints**
+
+No HTTP endpoint in this task.
+
+**Dependencies**
+
+T003, T005.
+
+**Acceptance criteria**
+
+- [ ] Experience detail uses canonical GetItem.
+- [ ] List operations use a verified Query/projection path.
+- [ ] No Scan is used.
+- [ ] Pagination is supported.
+
+**Tests**
+
+- [ ] GetItem/Query request tests.
+- [ ] Pagination tests.
+
+**Implementation notes**
+
+If a required experience list access path is absent, create a dedicated projection task before the dependent API task.
+
+---
