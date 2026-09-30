@@ -14,7 +14,7 @@ import java.util.*;
 public class QuestionService {
  private final QuestionRepository repo; private final QuestionMapper mapper; private final OpaqueCursorCodec cursors;
  public QuestionService(QuestionRepository repo,QuestionMapper mapper,OpaqueCursorCodec cursors){this.repo=repo;this.mapper=mapper;this.cursors=cursors;}
- public QuestionResponse find(Integer id){return repo.findById(id).found()?mapper.toResponse(repo.findById(id).data()):throwNotFound();}
+ public QuestionResponse find(Integer id){var result=repo.findById(id);return result.found()?mapper.toResponse(result.data()):throwNotFound();}
  public ApiCollectionResponse<QuestionSummaryResponse> list(Integer limit,String cursor,String company,String type,String sort){
    PaginationRequest p=PaginationRequest.of(limit,cursor); String normalizedCompany=normalize(company); String normalizedType=blank(type);
    validateSort(sort); boolean newest=!"oldest".equals(sort);
