@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -45,12 +46,19 @@ public class OpaqueCursorCodec {
                     decoded,
                     new TypeReference<Map<String, String>>() {}
             );
+
             if (key.isEmpty()) {
-                throw new PaginationCursorException("Cursor must contain a pagination key");
+                throw new PaginationCursorException(
+                        "Cursor must contain a pagination key"
+                );
             }
+
             return Map.copyOf(key);
-        } catch (IllegalArgumentException | JsonProcessingException exception) {
-            throw new PaginationCursorException("Invalid pagination cursor");
+        } catch (IllegalArgumentException | IOException exception) {
+            throw new PaginationCursorException(
+                    "Invalid pagination cursor",
+                    exception
+            );
         }
     }
 }
