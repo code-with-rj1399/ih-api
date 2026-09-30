@@ -14,7 +14,9 @@ Continue from Part 1. These tasks are part of the same implementation source of 
 
 ## T008 — Recent questions API
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Expose the primary recent-questions collection.
 
@@ -72,7 +74,9 @@ Do not fabricate a recent index. Verify the crawler schema/repository and create
 
 ## T009 — Question detail API
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Expose one interview question by id.
 
@@ -141,7 +145,9 @@ Do not expose modelName, dedupeHash, or other internal provenance unless explici
 
 ## T010 — Experience questions API
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Expose questions belonging to one interview experience.
 
@@ -198,7 +204,9 @@ Prefer the documented adjacency pattern over client-side question ID iteration.
 
 ## T011 — Experience detail API
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Expose a single interview experience.
 
@@ -266,7 +274,9 @@ Do not eagerly load all questions unless a separate endpoint contract requires i
 
 ## T012 — Experience list access path and API
 
-- [!] Status**Goal**
+- [!] Status
+
+**Goal**
 
 Expose a paginated collection of interview experiences.
 
@@ -324,7 +334,9 @@ The crawler schema currently has canonical experience items and a run-to-experie
 
 ## T013 — Company-filtered question API
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Support company filtering on the question collection.
 
@@ -377,7 +389,9 @@ Follow the crawler's stored company normalization exactly; do not add fuzzy matc
 
 ## T014 — Question-type filter API
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Support question-type filtering on the question collection.
 
