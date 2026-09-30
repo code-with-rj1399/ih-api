@@ -5,16 +5,15 @@ Continue from Parts 1–3. This file contains the final cross-cutting, contract,
 ## Progress
 
 - Total: 24
-- Completed: 0
-- Remaining: 24
+- Verified: 0
+- Implemented, CI pending: 2 (T022–T023)
+- Not started: T024
 
 ## Task list
 
 ## T022 — Public API documentation
 
-- [ ] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Document the implemented public API contract in this repository.
 
@@ -66,9 +65,7 @@ Keep this separate from crawler `docs/API.md`; this file documents the hq-API pu
 
 ## T023 — Public API contract and integration tests
 
-- [ ] Status
-
-**Goal**
+- [~] Status**Goal**
 
 Build a coherent regression suite for UI-facing REST behavior.
 
