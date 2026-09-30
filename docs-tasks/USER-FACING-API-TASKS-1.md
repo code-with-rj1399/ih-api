@@ -174,7 +174,9 @@ Planning commit: task documentation only.
 
 ## T001 — Public API conventions and package foundation
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Establish package layout and base conventions for the public API namespace.
 
@@ -209,7 +211,9 @@ Use repository conventions under `ai.interviewhq.api`. Do not introduce unrelate
 
 ## T002 — Common DTO envelope and error handling
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Introduce shared public response/error models and exception handling.
 
@@ -244,7 +248,9 @@ Keep the contract small and stable; do not expose stack traces.
 
 ## T003 — Opaque cursor pagination
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Implement one cursor codec and pagination model for collection APIs.
 
@@ -282,7 +288,9 @@ Prefer URL-safe opaque Base64 JSON. Cursor contents are implementation details.
 
 ## T004 — Public Question DTO and mapper
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Define the public question representation and mapper from persisted data.
 
@@ -318,7 +326,9 @@ Use the crawler schema as the field source. Do not invent topic fields absent fr
 
 ## T005 — Public Experience DTO and mapper
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Define the public interview-experience representation and mapper.
 
@@ -353,7 +363,9 @@ Preserve useful provenance such as source URL/platform, dates, company, role, an
 
 ## T006 — Question repository access paths
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Implement repository methods for question detail and experience-scoped question reads.
 
@@ -389,7 +401,9 @@ Verify the actual repository/schema before coding; do not guess key names.
 
 ## T007 — Experience repository access paths
 
-- [~] Status**Goal**
+- [~] Status
+
+**Goal**
 
 Implement repository methods for experience detail and required list reads.
 
