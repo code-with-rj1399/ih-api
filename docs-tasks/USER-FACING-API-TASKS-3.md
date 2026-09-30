@@ -6,9 +6,9 @@ Continue from Parts 1–2. These tasks remain API-only and are intended to be im
 
 - Total: 24
 - Verified: 0
-- Implemented, CI pending: 5 (T017–T021)
-- Blocked: T015–T016
-- Not started: T022+
+- Implemented, CI pending: 7 (T015–T021)
+- Blocked: none
+- Not started: T022–T024
 
 ## Task list
 
@@ -50,10 +50,10 @@ T012.
 
 **Acceptance criteria**
 
-- [ ] Company filter uses a Query access path.
-- [ ] Unknown company returns an empty collection.
-- [ ] Pagination works with the filter.
-- [ ] No Scan is used.
+- [x] Company filter uses a Query access path.
+- [x] Unknown company returns an empty collection.
+- [x] Pagination works with the filter.
+- [x] No Scan is used.
 
 **Tests**
 
@@ -63,7 +63,7 @@ T012.
 
 **Implementation notes**
 
-The current source schema does not provide a global company experience-list projection. This task is blocked until the crawler/database write path provides one; hq-API must not fall back to Scan.
+The crawler now provides EINDEX#COMPANY#{normalizedCompany}; hq-API selects that Query partition and never falls back to Scan.
 
 ---
 
@@ -120,10 +120,10 @@ T003, T013, T014.
 
 **Acceptance criteria**
 
-- [ ] Results are deterministic.
-- [ ] No unbounded Scan is used.
-- [ ] Values correspond to supported stored data/taxonomy.
-- [ ] Pagination or a documented bounded result is implemented.
+- [x] Results are deterministic.
+- [x] No unbounded Scan is used.
+- [x] Values correspond to supported stored data/taxonomy.
+- [x] Pagination or a documented bounded result is implemented.
 
 **Tests**
 
@@ -132,7 +132,7 @@ T003, T013, T014.
 
 **Implementation notes**
 
-The current schema provides question-type taxonomy but no metadata partition that can enumerate distinct companies or types efficiently. This task is blocked until a bounded metadata projection/access path is added to the crawler/database write path. Do not invent a search index or Scan.
+The crawler now materializes META#COMPANIES and META#QUESTION_TYPES partitions from observed persisted values. hq-API uses bounded Query pagination over those partitions and never scans canonical entities.
 
 ---
 
@@ -174,10 +174,10 @@ T008, T012.
 
 **Acceptance criteria**
 
-- [ ] Supported sort values are documented.
-- [ ] Sort maps directly to storage ordering.
-- [ ] Unsupported sorts return 400.
-- [ ] No full-result in-memory sorting is used.
+- [x] Supported sort values are documented.
+- [x] Sort maps directly to storage ordering.
+- [x] Unsupported sorts return 400.
+- [x] No full-result in-memory sorting is used.
 
 **Tests**
 
@@ -228,10 +228,10 @@ T013, T014, T015, T017.
 
 **Acceptance criteria**
 
-- [ ] Supported combinations choose a documented Query partition.
-- [ ] Residual filtering is bounded.
-- [ ] Unsupported expensive combinations return a clear client error.
-- [ ] Cursor behavior remains correct.
+- [x] Supported combinations choose a documented Query partition.
+- [x] Residual filtering is bounded.
+- [x] Unsupported expensive combinations return a clear client error.
+- [x] Cursor behavior remains correct.
 
 **Tests**
 
@@ -288,10 +288,10 @@ T002, T003, T008, T009, T012, T013, T014, T015, T017, T018.
 
 **Acceptance criteria**
 
-- [ ] Every public endpoint has validation.
-- [ ] Invalid requests do not invoke repositories.
-- [ ] Limits are enforced consistently.
-- [ ] Public error messages are actionable without leaking internals.
+- [x] Every public endpoint has validation.
+- [x] Invalid requests do not invoke repositories.
+- [x] Limits are enforced consistently.
+- [x] Public error messages are actionable without leaking internals.
 
 **Tests**
 
@@ -342,9 +342,9 @@ T008, T009, T010, T011, T012.
 
 **Acceptance criteria**
 
-- [ ] Method/path/status/duration are observable.
-- [ ] DynamoDB failures include useful operation context.
-- [ ] Question/experience bodies are not dumped to logs.
+- [x] Method/path/status/duration are observable.
+- [x] DynamoDB failures include useful operation context.
+- [x] Question/experience bodies are not dumped to logs.
 
 **Tests**
 
@@ -395,10 +395,10 @@ T008, T009.
 
 **Acceptance criteria**
 
-- [ ] Allowed origins are environment-configurable.
-- [ ] Production can restrict origins.
-- [ ] Credentialed wildcard CORS is not enabled.
-- [ ] Existing API behavior remains unchanged.
+- [x] Allowed origins are environment-configurable.
+- [x] Production can restrict origins.
+- [x] Credentialed wildcard CORS is not enabled.
+- [x] Existing API behavior remains unchanged.
 
 **Tests**
 

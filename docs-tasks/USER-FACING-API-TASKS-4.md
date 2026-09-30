@@ -49,11 +49,11 @@ T008, T009, T010, T011, T012, T013, T014, T015, T016, T017, T018, T019, T020, T0
 
 **Acceptance criteria**
 
-- [ ] `docs/PUBLIC-API.md` exists.
-- [ ] Every implemented public endpoint is documented.
-- [ ] Examples match the actual implementation.
-- [ ] Pagination/filter/sort/error behavior is explicit.
-- [ ] Crawler, ingestion, admin, and `/dev` endpoints are not presented as public APIs.
+- [x] `docs/PUBLIC-API.md` exists.
+- [x] Every implemented public endpoint is documented.
+- [x] Examples match the actual implementation.
+- [x] Pagination/filter/sort/error behavior is explicit.
+- [x] Crawler, ingestion, admin, and `/dev` endpoints are not presented as public APIs.
 
 **Tests**
 
@@ -111,11 +111,11 @@ T008, T009, T010, T011, T012, T013, T014, T015, T016, T017, T018, T019.
 
 **Acceptance criteria**
 
-- [ ] Major collection and detail endpoints have MockMvc coverage.
-- [ ] Pagination behavior is tested.
-- [ ] Filter and sort behavior is tested.
-- [ ] 400/404 error contracts are tested.
-- [ ] Tests are deterministic and CI-friendly.
+- [x] Major collection and detail endpoints have MockMvc coverage.
+- [x] Pagination behavior is tested.
+- [x] Filter and sort behavior is tested.
+- [x] 400/404 error contracts are tested.
+- [x] Tests are deterministic and CI-friendly.
 
 **Tests**
 
