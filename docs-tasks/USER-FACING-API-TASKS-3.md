@@ -228,10 +228,10 @@ T013, T014, T015, T017.
 
 **Acceptance criteria**
 
-- [ ] Supported combinations choose a documented Query partition.
-- [ ] Residual filtering is bounded.
-- [ ] Unsupported expensive combinations return a clear client error.
-- [ ] Cursor behavior remains correct.
+- [x] Supported combinations choose a documented Query partition.
+- [x] Residual filtering is bounded.
+- [x] Unsupported expensive combinations return a clear client error.
+- [x] Cursor behavior remains correct.
 
 **Tests**
 
