@@ -17,4 +17,6 @@ public interface ExperienceRepository {
             Integer crawlRunId,
             int limit,
             Map<String, String> startKey);
+
+    int mergeCompany(String sourceCompany, String targetCompany);
 }

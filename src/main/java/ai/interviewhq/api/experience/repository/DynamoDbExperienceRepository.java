@@ -172,6 +172,77 @@ public class DynamoDbExperienceRepository implements ExperienceRepository {
         }
     }
 
+    @Override
+    public int mergeCompany(String sourceCompany, String targetCompany) {
+        String source = normalizeCompany(sourceCompany);
+        String target = normalizeCompany(targetCompany);
+        if (source == null || target == null || source.equals(target)) return 0;
+
+        String sourcePk = "EINDEX#COMPANY#" + source;
+        String targetPk = "EINDEX#COMPANY#" + target;
+        int moved = 0;
+        Map<String, AttributeValue> lastKey = Map.of();
+
+        do {
+            QueryRequest.Builder query = QueryRequest.builder()
+                    .tableName(table)
+                    .keyConditionExpression("#pk = :pk")
+                    .expressionAttributeNames(Map.of("#pk", "pk"))
+                    .expressionAttributeValues(Map.of(
+                            ":pk", AttributeValue.builder().s(sourcePk).build()))
+                    .limit(100)
+                    .scanIndexForward(true);
+
+            if (!lastKey.isEmpty()) query.exclusiveStartKey(lastKey);
+            QueryResponse response = client.query(query.build());
+
+            for (Map<String, AttributeValue> indexItem : response.items()) {
+                AttributeValue skValue = indexItem.get("sk");
+                if (skValue == null || skValue.s() == null || !skValue.s().contains("#")) continue;
+
+                String experienceId = skValue.s().substring(skValue.s().lastIndexOf('#') + 1);
+                String experiencePk = "EXPERIENCE#" + experienceId;
+
+                GetItemResponse experience = client.getItem(GetItemRequest.builder()
+                        .tableName(table)
+                        .key(key(experiencePk, EXPERIENCE_ENTITY_SK))
+                        .build());
+                if (!experience.hasItem()) continue;
+
+                client.updateItem(UpdateItemRequest.builder()
+                        .tableName(table)
+                        .key(key(experiencePk, EXPERIENCE_ENTITY_SK))
+                        .updateExpression("SET #data.#company = :company")
+                        .expressionAttributeNames(Map.of("#data", "data", "#company", "company"))
+                        .expressionAttributeValues(Map.of(
+                                ":company", AttributeValue.builder().s(targetCompany.trim()).build()))
+                        .build());
+
+                Map<String, AttributeValue> newIndexItem = new LinkedHashMap<>(indexItem);
+                newIndexItem.put("pk", AttributeValue.builder().s(targetPk).build());
+                AttributeValue data = indexItem.get("data");
+                if (data != null && data.hasM()) {
+                    Map<String, AttributeValue> dataMap = new LinkedHashMap<>(data.m());
+                    dataMap.put("company", AttributeValue.builder().s(targetCompany.trim()).build());
+                    newIndexItem.put("data", AttributeValue.builder().m(dataMap).build());
+                }
+                client.putItem(PutItemRequest.builder().tableName(table).item(newIndexItem).build());
+                client.deleteItem(DeleteItemRequest.builder().tableName(table).key(
+                        key(sourcePk, skValue.s())).build());
+                moved++;
+            }
+
+            lastKey = response.lastEvaluatedKey() == null ? Map.of() : response.lastEvaluatedKey();
+        } while (!lastKey.isEmpty());
+
+        return moved;
+    }
+
+    private static String normalizeCompany(String company) {
+        if (company == null || company.isBlank()) return null;
+        return company.trim().toLowerCase(java.util.Locale.ROOT).replaceAll("\\s+", " ");
+    }
+
     private static Map<String, AttributeValue> key(String pk, String sk) {
         return Map.of(
                 "pk", AttributeValue.builder().s(pk).build(),
