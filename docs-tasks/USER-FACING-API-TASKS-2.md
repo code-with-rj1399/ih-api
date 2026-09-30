@@ -274,7 +274,7 @@ Do not eagerly load all questions unless a separate endpoint contract requires i
 
 ## T012 — Experience list access path and API
 
-- [!] Status
+- [~] Status
 
 **Goal**
 
@@ -315,10 +315,10 @@ T003, T005, T007.
 
 **Acceptance criteria**
 
-- [ ] List is cursor paginated.
-- [ ] Ordering is deterministic.
-- [ ] No Scan is used.
-- [ ] List payload is bounded.
+- [x] List is cursor paginated.
+- [x] Ordering is deterministic.
+- [x] No Scan is used.
+- [x] List payload is bounded.
 
 **Tests**
 
@@ -328,7 +328,7 @@ T003, T005, T007.
 
 **Implementation notes**
 
-The crawler schema currently has canonical experience items and a run-to-experience index, but no global time/company experience-list projection. Do not use Scan. This task is blocked until the crawler/database write path provides a Queryable global experience-list projection.
+The crawler now provides EINDEX#POSTED and EINDEX#COMPANY#{normalizedCompany} materialized projections. T012 uses the global posted-time partition; company filtering is implemented separately by T015. Do not use Scan.
 
 ---
 
