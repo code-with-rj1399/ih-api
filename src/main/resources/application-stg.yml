@@ -7,4 +7,6 @@ aws:
   region: ${AWS_REGION:ap-south-1}
   dynamodb:
     endpoint: ${DYNAMODB_ENDPOINT:}
-    table: ${DYNAMODB_TABLE:interviewhq-stg}
+    table: ${DYNAMODB_TABLE:interviewhq-crawler-stg}
+    experience-table: ${DYNAMODB_EXPERIENCE_TABLE:interviewhq-experiences-stg}
+    question-table: ${DYNAMODB_QUESTION_TABLE:interviewhq-questions-stg}
