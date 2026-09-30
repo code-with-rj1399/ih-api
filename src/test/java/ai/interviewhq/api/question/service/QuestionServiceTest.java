@@ -73,4 +73,23 @@ class QuestionServiceTest {
         verify(repo).list(eq("QINDEX#COMPANY#acme"), eq(false), eq(25), isNull(), filter.capture(), anyMap());
         assertEquals("contains(data.questionTypes, :type)", filter.getValue());
     }
+    @Test
+    void combinedFiltersPreserveOpaqueCursor() {
+        QuestionRepository repo = mock(QuestionRepository.class);
+        when(repo.list(anyString(), anyBoolean(), anyInt(), any(), any(), any()))
+                .thenReturn(new ai.interviewhq.api.infrastructure.dynamodb.DynamoDbPage<>(List.of(), Map.of()));
+
+        var service = new QuestionService(repo, new QuestionMapper(),
+                new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper()));
+
+        var codec = new OpaqueCursorCodec(new com.fasterxml.jackson.databind.ObjectMapper());
+        String cursor = codec.encode(Map.of("pk", "QINDEX#COMPANY#acme", "sk", "2026-09-30T00:00:00Z#7"));
+
+        service.list(10, cursor, "Acme", "Coding", "newest");
+
+        verify(repo).list(eq("QINDEX#COMPANY#acme"), eq(false), eq(10),
+                eq(Map.of("pk", "QINDEX#COMPANY#acme", "sk", "2026-09-30T00:00:00Z#7")),
+                eq("contains(data.questionTypes, :type)"), anyMap());
+    }
 }
+
