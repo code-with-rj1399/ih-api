@@ -20,7 +20,7 @@ fi
 echo "Pulling latest $BRANCH..."
 git pull origin "$BRANCH"
 
-echo "Stopping containers..."
+echo "Stopping existing containers..."
 docker compose down
 
 echo "Starting containers..."
