@@ -30,21 +30,42 @@ Configuration is provided through environment variables:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 
-The API does not require AWS credentials to be committed to the repository.
+The API does not create or start DynamoDB. In local development, DynamoDB Local is owned and started by `ih-crawler`; `ih-api` connects to that shared instance.
 
 ## Local Docker
 
+Start `ih-crawler` first so it owns the DynamoDB Local container:
+
 ```bash
-./run.sh
+cd ../ih-crawler
+docker compose up -d
 ```
 
-This starts DynamoDB Local and the API.
+Then start the API:
+
+```bash
+cd ../ih-api
+docker compose up -d --build
+```
 
 API: http://localhost:8091/api/hello
 API Debugger: http://localhost:8091/api-debugger/
 
-DynamoDB Local: http://localhost:8000
+The API Docker Compose configuration connects to the DynamoDB Local instance exposed by `ih-crawler` at `host.docker.internal:8000`.
 
-## Architecture direction
+## Architecture
 
-This service is the future `hq-API` boundary for InterviewHQ. The crawler will communicate with this service over HTTP, while this service owns application-level access to the shared InterviewHQ DynamoDB data model.
+Local development:
+
+    ih-crawler
+        |
+        +--> DynamoDB Local :8000
+        |
+    ih-api ------------> DynamoDB Local :8000
+
+Production:
+
+    ih-crawler --HTTPS--> hq-API --DynamoDB--> AWS
+    InterviewHQ UI --HTTPS--> hq-API
+
+The crawler owns the local DynamoDB lifecycle. The API only creates a DynamoDB client and uses the configured table; it does not create or initialize DynamoDB tables.
