@@ -1,6 +1,6 @@
 package ai.interviewhq.api;
 
-import ai.interviewhq.api.common.PublicApiException;
+import ai.interviewhq.api.common.exception.PublicApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
