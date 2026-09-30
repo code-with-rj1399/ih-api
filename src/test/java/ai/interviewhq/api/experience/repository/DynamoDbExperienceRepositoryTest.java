@@ -1,0 +1,5 @@
+package ai.interviewhq.api.experience.repository;
+import org.junit.jupiter.api.Test; import software.amazon.awssdk.services.dynamodb.DynamoDbClient; import software.amazon.awssdk.services.dynamodb.model.*; import java.util.Map; import static org.mockito.ArgumentMatchers.any; import static org.mockito.Mockito.*; import static org.junit.jupiter.api.Assertions.*;
+class DynamoDbExperienceRepositoryTest {
+ @Test void detailUsesCanonicalGetItem(){DynamoDbClient c=mock(DynamoDbClient.class);when(c.getItem(any(GetItemRequest.class))).thenReturn(GetItemResponse.builder().item(Map.of("data",AttributeValue.builder().m(Map.of("id",AttributeValue.builder().n("4").build())).build())).build());var r=new DynamoDbExperienceRepository(c,"table").findById(4);assertTrue(r.isPresent());var captor=org.mockito.ArgumentCaptor.forClass(GetItemRequest.class);verify(c).getItem(captor.capture());assertEquals("EXPERIENCE#4",captor.getValue().key().get("pk").s());assertEquals("ENTITY",captor.getValue().key().get("sk").s());}
+}
