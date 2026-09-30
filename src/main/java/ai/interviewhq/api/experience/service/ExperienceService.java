@@ -40,13 +40,18 @@ public class ExperienceService {
     }
 
     public ApiCollectionResponse<ExperienceSummaryResponse> list(
-            Integer limit, String cursor, String sort) {
+            Integer limit, String cursor, String sort, String company) {
         PaginationRequest pageRequest = PaginationRequest.of(limit, cursor);
         validateSort(sort);
 
+        String normalizedCompany = normalize(company);
+        String partitionKey = normalizedCompany == null
+                ? "EINDEX#POSTED"
+                : "EINDEX#COMPANY#" + normalizedCompany;
+
         boolean scanForward = "oldest".equals(sort);
         DynamoDbPage<Map<String, Object>> page = repo.list(
-                "EINDEX#POSTED",
+                partitionKey,
                 scanForward,
                 pageRequest.limit(),
                 cursors.decode(pageRequest.cursor()));
@@ -63,6 +68,12 @@ public class ExperienceService {
                         limit,
                         cursors.encode(page.lastEvaluatedKey()),
                         page.hasMore()));
+    }
+
+    private static String normalize(String value) {
+        if (value == null || value.isBlank()) return null;
+        String normalized = value.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+        return normalized.isBlank() ? null : normalized;
     }
 
     private static void validateSort(String sort) {
